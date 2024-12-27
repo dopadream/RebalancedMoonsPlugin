@@ -27,6 +27,14 @@ This mod uses LethalLevelLoader to update some of the vanilla moons to hopefully
 - Adamance's layout has been edited to be more Cruiser friendly.
 - Masked now spawn on Dine and have a small chance to spawn on Offense.
 
+# Screenshots
+
+<img src="https://i.ibb.co/XyMyBcB/Image.png">
+<img src="https://i.ibb.co/XYDy4Wz/Image.png">
+<img src="https://i.ibb.co/RSQ2kB6/Image.png">
+<img src="https://i.ibb.co/nL4SVSK/Image.png">
+<img src="https://i.ibb.co/nrrkyM2/Image.png">
+
 
 
 # Credits
