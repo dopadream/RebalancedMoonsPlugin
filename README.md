@@ -34,6 +34,8 @@ This mod uses LethalLevelLoader to update some of the vanilla moons to hopefully
 <img src="https://i.ibb.co/RSQ2kB6/Image.png">
 <img src="https://i.ibb.co/nL4SVSK/Image.png">
 <img src="https://i.ibb.co/nrrkyM2/Image.png">
+<img src="https://i.ibb.co/SxfSqc7/Image.png">
+<img src="https://i.ibb.co/mH2mdYD/Image.png">
 
 
 
