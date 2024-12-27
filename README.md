@@ -10,10 +10,11 @@ This mod uses LethalLevelLoader to update some of the vanilla moons to hopefully
 - Slightly lowered spawn rate of halves on Offense.
 - March's left fire exit was moved to the right of the ship to create a more evenly distanced triangle of fire exits around the moon. It's also a slightly shorter walk.
 - March now has a water tower hinting at the back fire exit's location.
+- Don't cross the rickety bridge on March.. You'll get lost!
 - March can now spawn other vanilla interiors by default.
 - March's facility size was decreased to 1.75.
 - Titan can now spawn gold bars.
-- Titan's facility size was decreased to 2.
+- Titan's facility size was decreased to 2 (but also has less traps to compensate)
 - Titan's spawn curve was adjusted to be a bit more forgiving.
 - Titan now has 3 fire exits.
 - Dine now has two fire exits, one requiring an extension ladder or a jetpack
