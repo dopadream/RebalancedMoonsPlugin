@@ -22,7 +22,7 @@ namespace RebalancedMoons
     [BepInDependency(CHAMELEON, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.4.9", WEATHER_REGISTRY = "mrov.WeatherRegistry", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.4.9", WEATHER_REGISTRY = "mrov.WeatherRegistry", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
@@ -61,7 +61,19 @@ namespace RebalancedMoons
 
             AssetBundleLoader.AddOnExtendedModLoadedListener(OnExtendedModRegistered, "dopadream", "RebalancedMoons");
 
-            new Harmony(PLUGIN_GUID).PatchAll();
+            Harmony harmony = new Harmony(PLUGIN_GUID);
+
+            harmony.PatchAll(typeof(RebalancedMoonsPatches));
+
+            if (Chainloader.PluginInfos.ContainsKey(CHAMELEON))
+            {
+                harmony.PatchAll(typeof(ChameleonCompat));
+            }
+
+            if (Chainloader.PluginInfos.ContainsKey(WEATHER_REGISTRY))
+            {
+                harmony.PatchAll(typeof(WeatherRegistryCompat));
+            }
 
             SceneManager.sceneLoaded += delegate
             {
@@ -247,12 +259,30 @@ namespace RebalancedMoons
                     { "Titan", configTitanScene.Value }
                 };
 
-                if (planetSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out bool configValue) && configValue)
+                if (planetSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out bool configValue))
                 {
-                    extendedLevel.SceneSelections.Clear();
-                    extendedLevel.SceneSelections.Add(new StringWithRarity(sceneName, 100));
-                }
+                    if (configValue)
+                    {
+                        extendedLevel.SceneSelections.Clear();
+                        extendedLevel.SceneSelections.Add(new StringWithRarity(sceneName, 100));
+                    } else
+                    {
+                        var vanillaSceneMapping = new Dictionary<string, string>
+                        {
+                            { "Offense", "Level7Offense" },
+                            { "March", "Level4March" },
+                            { "Adamance", "Level7Offense" },
+                            { "Dine", "Level6Dine" },
+                            { "Titan", "Level8Titan" }
+                        };
 
+                        if (vanillaSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out var vanillaScene))
+                        {
+                            extendedLevel.SceneSelections.Clear();
+                            extendedLevel.SceneSelections.Add(new StringWithRarity(vanillaScene, 100));
+                        }
+                    }
+                }   
             }
 
 
@@ -334,57 +364,6 @@ namespace RebalancedMoons
                 }
             }
 
-            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.LoadNewLevel))]
-            [HarmonyPostfix]
-            static void startGamePostfix(RoundManager __instance)
-            {
-                if (Chainloader.PluginInfos.ContainsKey(WEATHER_REGISTRY))
-                {
-                    initWeatherTweaksCompat(__instance);
-                }
-            }
-
-            static void initWeatherTweaksCompat(RoundManager instance)
-            {
-                if (instance.currentLevel.name.Equals("TitanLevel") && WeatherManager.GetCurrentLevelWeather().Name.Equals("Blackout"))
-                {
-                    Logger.LogDebug("Titan Blackout detected, turning the evil fire exit off...");
-                    foreach (AudioSource audioSource in SearchInLatestScene<AudioSource>().Where(aud => aud.gameObject.name == "BrokenLight"))
-                    {
-                        audioSource.mute = true;
-                    }
-                }
-            }
-
-            internal static List<T> SearchInLatestScene<T>() where T : UnityEngine.Object
-            {
-                List<T> returnList = new List<T>();
-                foreach (GameObject sceneObject in SceneManager.GetSceneAt(SceneManager.sceneCount - 1).GetRootGameObjects())
-                    foreach (T component in sceneObject.GetComponentsInChildren<T>())
-                        returnList.Add(component);
-                return (returnList);
-            }
-
-            [HarmonyPatch(typeof(Chameleon.SceneOverrides), nameof(Chameleon.SceneOverrides.SetUpFancyEntranceDoors))]
-            [HarmonyPrefix]
-            static void onApplyCosmeticInfoPostfix(ref LevelCosmeticInfo levelCosmeticInfo)
-            {
-               string levelName = StartOfRound.Instance.currentLevel.name;
-               if (levelName == "DineLevel")
-                {
-                    LevelCosmeticInfo newInfo =
-
-                    levelCosmeticInfo = new()
-                    {
-                        fancyDoorPos = new(-156.5477f, -15.0669f, 16.7538f),
-                        fancyDoorRot = Quaternion.Euler(270f, 174.2912f, 0f),
-                        doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND,
-                        windowMatName = "FakeWindowView3"
-                    };
-
-                    levelCosmeticInfo = newInfo;
-                }
-            }
 
             [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
             [HarmonyPriority(250)]
