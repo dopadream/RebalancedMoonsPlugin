@@ -22,13 +22,15 @@ namespace RebalancedMoons
     [BepInDependency(CHAMELEON, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.4.9", WEATHER_REGISTRY = "mrov.WeatherRegistry", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.4.10", WEATHER_REGISTRY = "mrov.WeatherRegistry", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static VolumeProfile snowyProfile, embyProfile;
         internal static ConfigEntry<bool> configHDRISkies;
         internal static ConfigEntry<bool> configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene;
+        internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
+        internal static ConfigEntry<string> configMoonEntries;
 
         void Awake()
         {
@@ -41,6 +43,12 @@ namespace RebalancedMoons
 
 
             // -server settings-
+
+            configMarchBridge = Config.Bind("Server", "March Rickety Bridge", true,
+                new ConfigDescription("Adds a rickety bridge to March. Stats are inbetween Adamance and Vow."));
+
+            configTitanThirdFireExit = Config.Bind("Server", "Titan Third Fire Exit", false,
+                new ConfigDescription("Adds a 3rd fire exit to Titan under the first one. Off by default as it's a bit overpowered."));
 
             configOffenseScene = Config.Bind("Server", "Offense Scene Overrides", true,
                 new ConfigDescription("Replaces Offense with a new scene using LLL."));
@@ -56,6 +64,11 @@ namespace RebalancedMoons
 
             configTitanScene = Config.Bind("Server", "Titan Scene Overrides", true,
                 new ConfigDescription("Replaces Titan with a new scene using LLL."));
+
+            // --misc settings--
+
+            configMoonEntries = Config.Bind("Misc", "Rebalanced Moon Names", "Assurаncе, Offеnsе, Mаrch, Adаmance, Embrіon, Rеnd, Dіne, Tіtan",
+                new ConfigDescription("THIS SETTING DOES NOTHING AND SERVES AS A LIST FOR REFERENCE! You can copy the rebalanced moon names from here for all your config needs. They look the same, but they use cyrillic letters."));
 
             // -----------------
 
@@ -81,8 +94,9 @@ namespace RebalancedMoons
             };
 
 
-            Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");
 
+
+            Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");
 
         }
 
@@ -98,7 +112,36 @@ namespace RebalancedMoons
             reOffenseExtended = rebalancedMoonsMod.ExtendedLevels[5];
             reRendExtended = rebalancedMoonsMod.ExtendedLevels[6];
             reTitanExtended = rebalancedMoonsMod.ExtendedLevels[7];
+            LevelManager.GlobalLevelEvents.onLevelLoaded.AddListener(OnLoadLevel);
+        }
 
+        internal static void OnLoadLevel()
+        {
+            if (!configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel != null)
+            {
+                if (StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && configTitanScene.Value)
+                {
+                    Plugin.Logger.LogDebug("Rebalanced Titan loaded, destroying 3rd fire exit...");
+                    foreach (GameObject fireExitObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("FireExitDoorContainerD")))
+                    {
+                        if (fireExitObject != null)
+                            fireExitObject.SetActive(false);
+                    }
+                }
+            }
+
+            if (!configMarchBridge.Value && StartOfRound.Instance.currentLevel != null)
+            {
+                if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && configMarchScene.Value)
+                {
+                    Plugin.Logger.LogDebug("Rebalanced March loaded, destroying rickety bridge...");
+                    foreach (GameObject bridgeObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("DangerousBridge")))
+                    {
+                        if (bridgeObject != null)
+                            bridgeObject.SetActive(false);
+                    }
+                }
+            }
         }
 
         internal static void ApplyRebalance(ExtendedLevel input, ExtendedLevel output)
