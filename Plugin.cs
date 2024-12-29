@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
@@ -32,10 +33,13 @@ namespace RebalancedMoons
 
             ModConfig.Init(Config);
 
+            NetcodePatcher();
+
             AssetBundleLoader.AddOnExtendedModLoadedListener(OnExtendedModRegistered, "dopadream", "RebalancedMoons");
 
             Harmony harmony = new Harmony(PLUGIN_GUID);
 
+            harmony.PatchAll(typeof(NetworkObjectManager));
             harmony.PatchAll(typeof(RebalancedMoonsPatches));
 
             if (Chainloader.PluginInfos.ContainsKey(CHAMELEON))
@@ -50,6 +54,7 @@ namespace RebalancedMoons
 
             SceneManager.sceneLoaded += delegate
             {
+                ModNetworkHandler.LevelEvent += RebalancedMoonsPatches.ReceivedEventFromServer;
                 ApplySky();
             };
 
@@ -58,6 +63,23 @@ namespace RebalancedMoons
 
             Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");
 
+        }
+
+        private static void NetcodePatcher()
+        {
+            var types = Assembly.GetExecutingAssembly().GetTypes();
+            foreach (var type in types)
+            {
+                var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                foreach (var method in methods)
+                {
+                    var attributes = method.GetCustomAttributes(typeof(RuntimeInitializeOnLoadMethodAttribute), false);
+                    if (attributes.Length > 0)
+                    {
+                        method.Invoke(null, null);
+                    }
+                }
+            }
         }
 
         internal static void OnExtendedModRegistered(ExtendedMod extendedMod)
@@ -77,28 +99,25 @@ namespace RebalancedMoons
 
         internal static void OnLoadLevel()
         {
-            if (!ModConfig.configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel != null)
+            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
             {
-                if (StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && ModConfig.configTitanScene.Value)
+                if (!ModConfig.configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel != null)
                 {
-                    Plugin.Logger.LogDebug("Rebalanced Titan loaded, destroying 3rd fire exit...");
-                    foreach (GameObject fireExitObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("FireExitDoorContainerD")))
+                    if (StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && ModConfig.configTitanScene.Value)
                     {
-                        if (fireExitObject != null)
-                            fireExitObject.SetActive(false);
+                        Plugin.Logger.LogDebug("Rebalanced Titan loaded, destroying 3rd fire exit...");
+                        RebalancedMoonsPatches.SendEventToClients("ExitEvent");
+
                     }
                 }
-            }
 
-            if (!ModConfig.configMarchBridge.Value && StartOfRound.Instance.currentLevel != null)
-            {
-                if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && ModConfig.configMarchScene.Value)
+                if (!ModConfig.configMarchBridge.Value && StartOfRound.Instance.currentLevel != null)
                 {
-                    Plugin.Logger.LogDebug("Rebalanced March loaded, destroying rickety bridge...");
-                    foreach (GameObject bridgeObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("DangerousBridge")))
+                    if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && ModConfig.configMarchScene.Value)
                     {
-                        if (bridgeObject != null)
-                            bridgeObject.SetActive(false);
+                        Plugin.Logger.LogDebug("Rebalanced March loaded, destroying rickety bridge...");
+                        RebalancedMoonsPatches.SendEventToClients("BridgeEvent");
+
                     }
                 }
             }
@@ -141,8 +160,6 @@ namespace RebalancedMoons
             input.SelectableLevel.spawnableOutsideObjects = output.SelectableLevel.spawnableOutsideObjects;
 
             input.SelectableLevel.riskLevel = output.SelectableLevel.riskLevel;
-
-            input.SelectableLevel.sceneName = output.SelectableLevel.sceneName;
 
             input.SelectableLevel.videoReel = output.SelectableLevel.videoReel;
 
@@ -213,7 +230,7 @@ namespace RebalancedMoons
 
 
         [HarmonyPatch]
-        class RebalancedMoonsPatches
+        internal class RebalancedMoonsPatches
         {
 
 
@@ -268,13 +285,14 @@ namespace RebalancedMoons
                     {
                         extendedLevel.SceneSelections.Clear();
                         extendedLevel.SceneSelections.Add(new StringWithRarity(sceneName, 100));
-                    } else
+                    }
+                    else
                     {
                         var vanillaSceneMapping = new Dictionary<string, string>
                         {
                             { "Offense", "Level7Offense" },
                             { "March", "Level4March" },
-                            { "Adamance", "Level7Offense" },
+                            { "Adamance", "Level10Adamance" },
                             { "Dine", "Level6Dine" },
                             { "Titan", "Level8Titan" }
                         };
@@ -285,7 +303,7 @@ namespace RebalancedMoons
                             extendedLevel.SceneSelections.Add(new StringWithRarity(vanillaScene, 100));
                         }
                     }
-                }   
+                }
             }
 
 
@@ -312,6 +330,47 @@ namespace RebalancedMoons
 
             }
 
+            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.DespawnPropsAtEndOfRound))]
+            [HarmonyPostfix]
+            static void UnsubscribeFromHandler()
+            {
+                ModNetworkHandler.LevelEvent -= ReceivedEventFromServer;
+            }
+
+            public static void ReceivedEventFromServer(string eventName)
+            {
+                if (eventName.Equals("ExitEvent"))
+                {
+                    foreach (GameObject fireExitObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("FireExitDoorContainerD")))
+                    {
+                        if (fireExitObject != null)
+                        {
+                            fireExitObject.SetActive(false);
+                        }
+                    }
+                }
+
+                if (eventName.Equals("BridgeEvent"))
+                {
+                    foreach (GameObject bridgeObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("DangerousBridge")))
+                    {
+                        if (bridgeObject != null)
+                        {
+                            bridgeObject.SetActive(false);
+
+                        }
+                    }
+                }
+                // Event Code Here
+            }
+
+            public static void SendEventToClients(string eventName)
+            {
+                if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
+                    return;
+
+                ModNetworkHandler.Instance.EventClientRpc(eventName);
+            }
 
             [HarmonyPatch(typeof(ExtendedLevel), "SetExtendedDungeonFlowMatches")]
             [HarmonyPostfix]
@@ -386,7 +445,7 @@ namespace RebalancedMoons
                     }
                 }
             }
-             
+
             [HarmonyPatch(typeof(TerminalManager), nameof(TerminalManager.GetExtendedLevelGroups))]
             [HarmonyPostfix]
             static void onGetExtendedLevelGroupsPostfix(ref List<ExtendedLevelGroup> __result)

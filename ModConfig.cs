@@ -11,7 +11,7 @@ namespace RebalancedMoons
         internal static ConfigEntry<bool> configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene;
         internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
         internal static ConfigEntry<string> configMoonEntries;
-        static void Init(ConfigFile cfg)
+        internal static void Init(ConfigFile cfg)
         {
             // -client settings-
 
