@@ -1,8 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Bootstrap;
-using BepInEx.Configuration;
 using BepInEx.Logging;
-using Chameleon.Info;
 using HarmonyLib;
 using LethalLevelLoader;
 using System;
@@ -13,7 +11,6 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
-using WeatherRegistry;
 
 namespace RebalancedMoons
 {
@@ -27,50 +24,13 @@ namespace RebalancedMoons
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static VolumeProfile snowyProfile, embyProfile;
-        internal static ConfigEntry<bool> configHDRISkies;
-        internal static ConfigEntry<bool> configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene;
-        internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
-        internal static ConfigEntry<string> configMoonEntries;
+
 
         void Awake()
         {
             Logger = base.Logger;
 
-            // -client settings-
-
-            configHDRISkies = Config.Bind("Client", "New HDRI Skies", true,
-                new ConfigDescription("Adds new HDRI sky volumes to Embrion and snowy moons."));
-
-
-            // -server settings-
-
-            configMarchBridge = Config.Bind("Server", "March Rickety Bridge", true,
-                new ConfigDescription("Adds a rickety bridge to March. Stats are inbetween Adamance and Vow."));
-
-            configTitanThirdFireExit = Config.Bind("Server", "Titan Third Fire Exit", false,
-                new ConfigDescription("Adds a 3rd fire exit to Titan under the first one. Off by default as it's a bit overpowered."));
-
-            configOffenseScene = Config.Bind("Server", "Offense Scene Overrides", true,
-                new ConfigDescription("Replaces Offense with a new scene using LLL."));
-
-            configAdamanceScene = Config.Bind("Server", "Adamance Scene Overrides", true,
-                new ConfigDescription("Replaces Adamance with a new scene using LLL."));
-
-            configMarchScene = Config.Bind("Server", "March Scene Overrides", true,
-                new ConfigDescription("Replaces March with a new scene using LLL."));
-
-            configDineScene = Config.Bind("Server", "Dine Scene Overrides", true,
-                new ConfigDescription("Replaces Dine with a new scene using LLL."));
-
-            configTitanScene = Config.Bind("Server", "Titan Scene Overrides", true,
-                new ConfigDescription("Replaces Titan with a new scene using LLL."));
-
-            // --misc settings--
-
-            configMoonEntries = Config.Bind("Misc", "Rebalanced Moon Names", "Assurаncе, Offеnsе, Mаrch, Adаmance, Embrіon, Rеnd, Dіne, Tіtan",
-                new ConfigDescription("THIS SETTING DOES NOTHING AND SERVES AS A LIST FOR REFERENCE! You can copy the rebalanced moon names from here for all your config needs. They look the same, but they use cyrillic letters."));
-
-            // -----------------
+            ModConfig.Init(Config);
 
             AssetBundleLoader.AddOnExtendedModLoadedListener(OnExtendedModRegistered, "dopadream", "RebalancedMoons");
 
@@ -117,9 +77,9 @@ namespace RebalancedMoons
 
         internal static void OnLoadLevel()
         {
-            if (!configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel != null)
+            if (!ModConfig.configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel != null)
             {
-                if (StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && configTitanScene.Value)
+                if (StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && ModConfig.configTitanScene.Value)
                 {
                     Plugin.Logger.LogDebug("Rebalanced Titan loaded, destroying 3rd fire exit...");
                     foreach (GameObject fireExitObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("FireExitDoorContainerD")))
@@ -130,9 +90,9 @@ namespace RebalancedMoons
                 }
             }
 
-            if (!configMarchBridge.Value && StartOfRound.Instance.currentLevel != null)
+            if (!ModConfig.configMarchBridge.Value && StartOfRound.Instance.currentLevel != null)
             {
-                if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && configMarchScene.Value)
+                if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && ModConfig.configMarchScene.Value)
                 {
                     Plugin.Logger.LogDebug("Rebalanced March loaded, destroying rickety bridge...");
                     foreach (GameObject bridgeObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("DangerousBridge")))
@@ -192,7 +152,7 @@ namespace RebalancedMoons
 
         internal static void ApplySky()
         {
-            if (configHDRISkies.Value)
+            if (ModConfig.configHDRISkies.Value)
             {
                 foreach (Volume volume in FindObjectsOfType<Volume>())
                 {
@@ -295,11 +255,11 @@ namespace RebalancedMoons
             {
                 var planetSceneMapping = new Dictionary<string, bool>
                 {
-                    { "Offense", configOffenseScene.Value },
-                    { "March", configMarchScene.Value },
-                    { "Adamance", configAdamanceScene.Value },
-                    { "Dine", configDineScene.Value },
-                    { "Titan", configTitanScene.Value }
+                    { "Offense", ModConfig.configOffenseScene.Value },
+                    { "March", ModConfig.configMarchScene.Value },
+                    { "Adamance", ModConfig.configAdamanceScene.Value },
+                    { "Dine", ModConfig.configDineScene.Value },
+                    { "Titan", ModConfig.configTitanScene.Value }
                 };
 
                 if (planetSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out bool configValue))
@@ -432,16 +392,18 @@ namespace RebalancedMoons
             static void onGetExtendedLevelGroupsPostfix(ref List<ExtendedLevelGroup> __result)
             {
                 List<ExtendedLevelGroup> newList = new List<ExtendedLevelGroup>();
-
-                foreach (ExtendedLevelGroup group in __result)
+                if (rebalancedMoonsMod != null)
                 {
-                    if (!group.extendedLevelsList.Any(x => rebalancedMoonsMod.ExtendedLevels.Any(y => y == x)))
+                    foreach (ExtendedLevelGroup group in __result)
                     {
-                        newList.Add(group);
+                        if (!group.extendedLevelsList.Any(x => rebalancedMoonsMod.ExtendedLevels.Any(y => y == x)))
+                        {
+                            newList.Add(group);
+                        }
                     }
-                }
 
-                __result = newList;
+                    __result = newList;
+                }
             }
         }
     }

@@ -1,0 +1,53 @@
+﻿using BepInEx.Configuration;
+
+
+namespace RebalancedMoons
+{
+    public class ModConfig 
+    {
+
+
+        internal static ConfigEntry<bool> configHDRISkies;
+        internal static ConfigEntry<bool> configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene;
+        internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
+        internal static ConfigEntry<string> configMoonEntries;
+        static void Init(ConfigFile cfg)
+        {
+            // -client settings-
+
+            configHDRISkies = cfg.Bind("Client", "New HDRI Skies", true,
+                new ConfigDescription("Adds new HDRI sky volumes to Embrion and snowy moons."));
+
+            // -server settings-
+
+            configMarchBridge = cfg.Bind("Server", "March Rickety Bridge", true,
+                new ConfigDescription("Adds a rickety bridge to March. Stats are inbetween Adamance and Vow."));
+
+            configTitanThirdFireExit = cfg.Bind("Server", "Titan Third Fire Exit", false,
+                new ConfigDescription("Adds a 3rd fire exit to Titan under the first one. Off by default as it's a bit overpowered."));
+
+            configOffenseScene = cfg.Bind("Server", "Offense Scene Overrides", true,
+                new ConfigDescription("Replaces Offense with a new scene using LLL."));
+
+            configAdamanceScene = cfg.Bind("Server", "Adamance Scene Overrides", true,
+                new ConfigDescription("Replaces Adamance with a new scene using LLL."));
+
+            configMarchScene = cfg.Bind("Server", "March Scene Overrides", true,
+                new ConfigDescription("Replaces March with a new scene using LLL."));
+
+            configDineScene = cfg.Bind("Server", "Dine Scene Overrides", true,
+                new ConfigDescription("Replaces Dine with a new scene using LLL."));
+
+            configTitanScene = cfg.Bind("Server", "Titan Scene Overrides", true,
+                new ConfigDescription("Replaces Titan with a new scene using LLL."));
+
+            // --misc settings--
+
+            configMoonEntries = cfg.Bind("Misc", "Rebalanced Moon Names", "Assurаncе, Offеnsе, Mаrch, Adаmance, Embrіon, Rеnd, Dіne, Tіtan",
+                new ConfigDescription("THIS SETTING DOES NOTHING AND SERVES AS A LIST FOR REFERENCE! You can copy the rebalanced moon names from here for all your config needs. They look the same, but they use cyrillic letters."));
+
+            // -----------------
+        }
+
+    }
+}
