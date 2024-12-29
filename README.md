@@ -16,7 +16,7 @@ This mod uses LethalLevelLoader to update some of the vanilla moons to hopefully
 - Titan can now spawn gold bars.
 - Titan's facility size was decreased to 2 (but also has less traps to compensate)
 - Titan's spawn curve was adjusted to be a bit more forgiving.
-- Titan now has 3 fire exits.
+- Titan now has 2 fire exits (with an optional 3rd one).
 - Dine now has two fire exits, one requiring an extension ladder or a jetpack
 - Dine's terrain was slightly edited to allow for an alternate route from the right fire exit.
 - Dine now has guide light poles that go towards main, and the fence in the middle of the map was moved back so the moon is more cruiser friendly.
