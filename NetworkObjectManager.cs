@@ -22,13 +22,14 @@ namespace RebalancedMoons
             {
                 AssetBundle networkObject = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "networkprefab"));
                 networkPrefab = networkObject.LoadAsset<GameObject>("RBMNetworkHandler");
-                networkPrefab.AddComponent<ModNetworkHandler>();
             }
             catch
             {
                 Plugin.Logger.LogError("Encountered some error loading assets from bundle \"networkprefab\". Did you install the plugin correctly?");
                 return;
             }
+
+            networkPrefab.AddComponent<ModNetworkHandler>();
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 

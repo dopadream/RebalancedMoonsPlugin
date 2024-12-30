@@ -54,7 +54,6 @@ namespace RebalancedMoons
 
             SceneManager.sceneLoaded += delegate
             {
-                ModNetworkHandler.LevelEvent += RebalancedMoonsPatches.ReceivedEventFromServer;
                 ApplySky();
             };
 
@@ -107,7 +106,6 @@ namespace RebalancedMoons
                     {
                         Plugin.Logger.LogDebug("Rebalanced Titan loaded, destroying 3rd fire exit...");
                         RebalancedMoonsPatches.SendEventToClients("ExitEvent");
-
                     }
                 }
 
@@ -117,7 +115,6 @@ namespace RebalancedMoons
                     {
                         Plugin.Logger.LogDebug("Rebalanced March loaded, destroying rickety bridge...");
                         RebalancedMoonsPatches.SendEventToClients("BridgeEvent");
-
                     }
                 }
             }
@@ -250,17 +247,17 @@ namespace RebalancedMoons
             static void RebalanceMoon(ExtendedLevel extendedLevel)
             {
                 var planetActions = new Dictionary<string, Action<ExtendedLevel>>
-            {
-                { "Assurance", level => ApplyRebalance(level, reAssuranceExtended) },
-                { "Offense", level => { ApplyRebalance(level, reOffenseExtended); SetScene(level, "ReOffenseScene"); } },
-                { "March", level => { ApplyRebalance(level, reMarchExtended); SetScene(level, "ReMarchLevel"); } },
-                { "Adamance", level => { ApplyRebalance(level, reAdamanceExtended); SetScene(level, "ReAdamanceScene"); } },
-                { "Rend", level => ApplyRebalance(level, reRendExtended) },
-                { "Dine", level => { ApplyRebalance(level, reDineExtended); SetScene(level, "ReDineScene"); } },
-                { "Titan", level => { ApplyRebalance(level, reTitanExtended); SetScene(level, "ReTitanScene"); } },
-                { "Artifice", level => level.SelectableLevel.riskLevel = "S+" },
-                { "Embrion", level => ApplyRebalance(level, reEmbrionExtended) }
-            };
+                {
+                    { "Assurance", level => ApplyRebalance(level, reAssuranceExtended) },
+                    { "Offense", level => { ApplyRebalance(level, reOffenseExtended); SetScene(level, "ReOffenseScene"); } },
+                    { "March", level => { ApplyRebalance(level, reMarchExtended); SetScene(level, "ReMarchLevel"); } },
+                    { "Adamance", level => { ApplyRebalance(level, reAdamanceExtended); SetScene(level, "ReAdamanceScene"); } },
+                    { "Rend", level => ApplyRebalance(level, reRendExtended) },
+                    { "Dine", level => { ApplyRebalance(level, reDineExtended); SetScene(level, "ReDineScene"); } },
+                    { "Titan", level => { ApplyRebalance(level, reTitanExtended); SetScene(level, "ReTitanScene"); } },
+                    { "Artifice", level => level.SelectableLevel.riskLevel = "S+" },
+                    { "Embrion", level => ApplyRebalance(level, reEmbrionExtended) }
+                };
 
                 if (planetActions.TryGetValue(extendedLevel.NumberlessPlanetName, out var action))
                 {
@@ -270,38 +267,27 @@ namespace RebalancedMoons
 
             static void SetScene(ExtendedLevel extendedLevel, string sceneName)
             {
-                var planetSceneMapping = new Dictionary<string, bool>
+                if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
                 {
-                    { "Offense", ModConfig.configOffenseScene.Value },
-                    { "March", ModConfig.configMarchScene.Value },
-                    { "Adamance", ModConfig.configAdamanceScene.Value },
-                    { "Dine", ModConfig.configDineScene.Value },
-                    { "Titan", ModConfig.configTitanScene.Value }
-                };
-
-                if (planetSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out bool configValue))
-                {
-                    if (configValue)
+                    var planetSceneMapping = new Dictionary<string, bool>
                     {
-                        extendedLevel.SceneSelections.Clear();
-                        extendedLevel.SceneSelections.Add(new StringWithRarity(sceneName, 100));
-                    }
-                    else
-                    {
-                        var vanillaSceneMapping = new Dictionary<string, string>
-                        {
-                            { "Offense", "Level7Offense" },
-                            { "March", "Level4March" },
-                            { "Adamance", "Level10Adamance" },
-                            { "Dine", "Level6Dine" },
-                            { "Titan", "Level8Titan" }
-                        };
+                        { "Offense", ModConfig.configOffenseScene.Value },
+                        { "March", ModConfig.configMarchScene.Value },
+                        { "Adamance", ModConfig.configAdamanceScene.Value },
+                        { "Dine", ModConfig.configDineScene.Value },
+                        { "Titan", ModConfig.configTitanScene.Value }
+                    };
 
-                        if (vanillaSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out var vanillaScene))
-                        {
-                            extendedLevel.SceneSelections.Clear();
-                            extendedLevel.SceneSelections.Add(new StringWithRarity(vanillaScene, 100));
-                        }
+                    if (planetSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out bool configValue))
+                    {
+                        string setEvent;
+
+                        if (configValue)
+                            setEvent = "RBMSceneEvent";
+                        else
+                            setEvent = "VanillaSceneEvent";
+
+                        /*SendLevelToClients(extendedLevel, setEvent, sceneName);*/
                     }
                 }
             }
@@ -328,48 +314,6 @@ namespace RebalancedMoons
                 InitMoons();
                 __instance.screenLevelVideoReel.Play();
 
-            }
-
-            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.DespawnPropsAtEndOfRound))]
-            [HarmonyPostfix]
-            static void UnsubscribeFromHandler()
-            {
-                ModNetworkHandler.LevelEvent -= ReceivedEventFromServer;
-            }
-
-            public static void ReceivedEventFromServer(string eventName)
-            {
-                if (eventName.Equals("ExitEvent"))
-                {
-                    foreach (GameObject fireExitObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("FireExitDoorContainerD")))
-                    {
-                        if (fireExitObject != null)
-                        {
-                            fireExitObject.SetActive(false);
-                        }
-                    }
-                }
-
-                if (eventName.Equals("BridgeEvent"))
-                {
-                    foreach (GameObject bridgeObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("DangerousBridge")))
-                    {
-                        if (bridgeObject != null)
-                        {
-                            bridgeObject.SetActive(false);
-
-                        }
-                    }
-                }
-                // Event Code Here
-            }
-
-            public static void SendEventToClients(string eventName)
-            {
-                if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
-                    return;
-
-                ModNetworkHandler.Instance.EventClientRpc(eventName);
             }
 
             [HarmonyPatch(typeof(ExtendedLevel), "SetExtendedDungeonFlowMatches")]
@@ -446,6 +390,87 @@ namespace RebalancedMoons
                 }
             }
 
+            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
+            [HarmonyPostfix]
+            static void SubscribeToHandler()
+            {
+                ModNetworkHandler.LevelEvent += ReceivedEventFromServer;
+            }
+
+            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.DespawnPropsAtEndOfRound))]
+            [HarmonyPostfix]
+            static void UnsubscribeFromHandler()
+            {
+                ModNetworkHandler.LevelEvent -= ReceivedEventFromServer;
+            }
+
+            public static void ReceivedEventFromServer(string eventName)
+            {
+                switch (eventName)
+                {
+                    case "ExitEvent":
+                        foreach (GameObject fireExitObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("FireExitDoorContainerD")))
+                        {
+                            if (fireExitObject != null)
+                            {
+                                fireExitObject.SetActive(false);
+                            }
+                        }
+                        break;
+                    case "BridgeEvent":
+                        foreach (GameObject bridgeObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("DangerousBridge")))
+                        {
+                            if (bridgeObject != null)
+                            {
+                                bridgeObject.SetActive(false);
+                            }
+                        }
+                        break;
+                }
+                // Event Code Here
+            }
+
+            public static void ReceivedLevelFromServer(int extendedLevel, string eventName, string sceneName)
+            {
+                foreach (ExtendedLevel patchedLevel in PatchedContent.VanillaExtendedLevels)
+                {
+                    if (patchedLevel.GetInstanceID().Equals(extendedLevel))
+                    {
+                        switch (eventName)
+                        {
+                            case "RBMSceneEvent":
+                                patchedLevel.SceneSelections.Clear();
+                                patchedLevel.SceneSelections.Add(new StringWithRarity(sceneName, 100));
+                                break;
+                            case "VanillaSceneEvent":
+                                var vanillaSceneMapping = new Dictionary<string, string>
+                                {
+                                    { "Offense", "Level7Offense" },
+                                    { "March", "Level4March" },
+                                    { "Adamance", "Level10Adamance" },
+                                    { "Dine", "Level6Dine" },
+                                    { "Titan", "Level8Titan" }
+                                };
+
+                                if (vanillaSceneMapping.TryGetValue(patchedLevel.NumberlessPlanetName, out var vanillaScene))
+                                {
+                                    patchedLevel.SceneSelections.Clear();
+                                    patchedLevel.SceneSelections.Add(new StringWithRarity(vanillaScene, 100));
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+
+            public static void SendEventToClients(string eventName)
+            {
+                if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
+                    return;
+
+                ModNetworkHandler.Instance.EventClientRpc(eventName);
+            }
+
             [HarmonyPatch(typeof(TerminalManager), nameof(TerminalManager.GetExtendedLevelGroups))]
             [HarmonyPostfix]
             static void onGetExtendedLevelGroupsPostfix(ref List<ExtendedLevelGroup> __result)
@@ -453,6 +478,7 @@ namespace RebalancedMoons
                 List<ExtendedLevelGroup> newList = new List<ExtendedLevelGroup>();
                 if (rebalancedMoonsMod != null)
                 {
+
                     foreach (ExtendedLevelGroup group in __result)
                     {
                         if (!group.extendedLevelsList.Any(x => rebalancedMoonsMod.ExtendedLevels.Any(y => y == x)))
