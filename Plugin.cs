@@ -20,11 +20,18 @@ namespace RebalancedMoons
     [BepInDependency(CHAMELEON, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
+        public static Plugin Instance { get; set; }
         public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.4.10", WEATHER_REGISTRY = "mrov.WeatherRegistry", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static VolumeProfile snowyProfile, embyProfile;
+        public AssetBundle NetworkBundle;
+
+        public Plugin()
+        {
+            Instance = this;
+        }
 
 
         void Awake()
@@ -32,6 +39,10 @@ namespace RebalancedMoons
             Logger = base.Logger;
 
             ModConfig.Init(Config);
+
+            var dllFolderPath = Path.GetDirectoryName(Info.Location);
+            var assetBundleFilePath = Path.Combine(dllFolderPath, "networkprefab");
+            NetworkBundle = AssetBundle.LoadFromFile(assetBundleFilePath);
 
             NetcodePatcher();
 
@@ -280,20 +291,14 @@ namespace RebalancedMoons
 
                     if (planetSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out bool configValue))
                     {
-                        string setEvent;
 
-                        if (configValue)
-                            setEvent = "RBMSceneEvent";
-                        else
-                            setEvent = "VanillaSceneEvent";
-
-                        /*SendLevelToClients(extendedLevel, setEvent, sceneName);*/
+                        SendLevelToClients(extendedLevel.SelectableLevel.levelID, "RBMSceneEvent", sceneName);
                     }
                 }
             }
 
 
-            [HarmonyPatch(typeof(StartOfRound), "Start")]
+            [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.OnClientConnect))]
             [HarmonyPostfix]
             static void StartOfRoundPostFix(StartOfRound __instance)
             {
@@ -328,7 +333,7 @@ namespace RebalancedMoons
                     switch (extendedFlow.DungeonFlow.name)
                     {
                         case "Level1Flow3Exits":
-                            planetNames.RemoveAll(p => p.Name.Equals("March"));
+                            planetNames.Clear();
                             break;
 
                         case "Level1Flow":
@@ -372,7 +377,7 @@ namespace RebalancedMoons
 
 
             [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
-            [HarmonyPriority(250)]
+            [HarmonyPriority(Priority.First)]
             [HarmonyPrefix]
             static void onGenerateNewFloorPrefix(RoundManager __instance)
             {
@@ -391,9 +396,10 @@ namespace RebalancedMoons
             }
 
             [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
-            [HarmonyPostfix]
+            [HarmonyPrefix]
             static void SubscribeToHandler()
             {
+                ModNetworkHandler.SendLevelEvent += ReceivedLevelFromServer;
                 ModNetworkHandler.LevelEvent += ReceivedEventFromServer;
             }
 
@@ -402,6 +408,7 @@ namespace RebalancedMoons
             static void UnsubscribeFromHandler()
             {
                 ModNetworkHandler.LevelEvent -= ReceivedEventFromServer;
+                ModNetworkHandler.SendLevelEvent -= ReceivedLevelFromServer;
             }
 
             public static void ReceivedEventFromServer(string eventName)
@@ -434,13 +441,14 @@ namespace RebalancedMoons
             {
                 foreach (ExtendedLevel patchedLevel in PatchedContent.VanillaExtendedLevels)
                 {
-                    if (patchedLevel.GetInstanceID().Equals(extendedLevel))
+                    if (patchedLevel.SelectableLevel.levelID.Equals(extendedLevel))
                     {
                         switch (eventName)
                         {
                             case "RBMSceneEvent":
                                 patchedLevel.SceneSelections.Clear();
                                 patchedLevel.SceneSelections.Add(new StringWithRarity(sceneName, 100));
+                                Logger.LogDebug("aaddinng sceneee");
                                 break;
                             case "VanillaSceneEvent":
                                 var vanillaSceneMapping = new Dictionary<string, string>
@@ -469,6 +477,14 @@ namespace RebalancedMoons
                     return;
 
                 ModNetworkHandler.Instance.EventClientRpc(eventName);
+            }
+
+            public static void SendLevelToClients(int extendedLevel, string eventName, string sceneName)
+            {
+                if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
+                    return;
+
+                ModNetworkHandler.Instance.LevelClientRpc(extendedLevel, eventName, sceneName);
             }
 
             [HarmonyPatch(typeof(TerminalManager), nameof(TerminalManager.GetExtendedLevelGroups))]

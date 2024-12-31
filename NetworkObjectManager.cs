@@ -9,26 +9,20 @@ namespace RebalancedMoons
     [HarmonyPatch]
     internal class NetworkObjectManager
     {
+
+        public static AssetBundle assetBundle;
         static GameObject networkPrefab;
 
-        [HarmonyPatch(typeof(GameNetworkManager), "Start")]
+        [HarmonyPatch(typeof(GameNetworkManager), nameof(GameNetworkManager.Start))]
         [HarmonyPostfix]
         public static void Init()
         {
             if (networkPrefab != null)
-                return;
-
-            try
             {
-                AssetBundle networkObject = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "networkprefab"));
-                networkPrefab = networkObject.LoadAsset<GameObject>("RBMNetworkHandler");
-            }
-            catch
-            {
-                Plugin.Logger.LogError("Encountered some error loading assets from bundle \"networkprefab\". Did you install the plugin correctly?");
                 return;
             }
 
+            networkPrefab = (GameObject)Plugin.Instance.NetworkBundle.LoadAsset("RBMNetworkHandler");
             networkPrefab.AddComponent<ModNetworkHandler>();
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);

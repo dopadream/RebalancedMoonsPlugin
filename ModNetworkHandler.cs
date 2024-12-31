@@ -1,21 +1,23 @@
-﻿using LethalLevelLoader;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using Unity.Netcode;
 
 namespace RebalancedMoons
 {
     public class ModNetworkHandler : NetworkBehaviour
     {
+
+        public static ModNetworkHandler Instance { get; private set; }
+
         public override void OnNetworkSpawn()
         {
             LevelEvent = null;
+            SendLevelEvent = null;
 
-            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+
+            if ((NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer) && Instance != null) {
                 Instance?.gameObject.GetComponent<NetworkObject>().Despawn();
+            }
             Instance = this;
-
             base.OnNetworkSpawn();
         }
 
@@ -25,13 +27,15 @@ namespace RebalancedMoons
             LevelEvent?.Invoke(eventName); // If the event has subscribers (does not equal null), invoke the event
         }
 
-
+        [ClientRpc]
+        public void LevelClientRpc(int extendedLevel, string eventName, string sceneName)
+        {
+            SendLevelEvent?.Invoke(extendedLevel, eventName, sceneName);
+        }
 
         public static event Action<String> LevelEvent;
 
-
-
-        public static ModNetworkHandler Instance { get; private set; }
+        public static event Action<int, String, String> SendLevelEvent;
 
     }
 }
