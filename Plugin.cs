@@ -280,6 +280,7 @@ namespace RebalancedMoons
             {
                 if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
                 {
+                    Logger.LogDebug("yeah this works");
                     var planetSceneMapping = new Dictionary<string, bool>
                     {
                         { "Offense", ModConfig.configOffenseScene.Value },
@@ -291,16 +292,38 @@ namespace RebalancedMoons
 
                     if (planetSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out bool configValue))
                     {
-
+                        Logger.LogDebug("yeah so does this");
                         SendLevelToClients(extendedLevel.SelectableLevel.levelID, "RBMSceneEvent", sceneName);
                     }
                 }
             }
 
+            [HarmonyPatch(typeof(QuickMenuManager), nameof(QuickMenuManager.Start))]
+            [HarmonyPostfix]
+            static void SubscribeToHandler()
+            {
+                ModNetworkHandler.SendLevelEvent += ReceivedLevelFromServer;
+                ModNetworkHandler.LevelEvent += ReceivedEventFromServer;
+                setupLobby(StartOfRound.Instance);
+            }
+
+            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.DespawnPropsAtEndOfRound))]
+            [HarmonyPostfix]
+            static void UnsubscribeFromHandler()
+            {
+                ModNetworkHandler.LevelEvent -= ReceivedEventFromServer;
+                ModNetworkHandler.SendLevelEvent -= ReceivedLevelFromServer;
+            }
+
 
             [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.OnClientConnect))]
             [HarmonyPostfix]
-            static void StartOfRoundPostFix(StartOfRound __instance)
+            static void ClientConnectPostFix(StartOfRound __instance)
+            {
+                setupLobby(__instance);
+            }
+
+            static void setupLobby(StartOfRound __instance)
             {
 
                 foreach (SelectableLevel level in __instance.levels)
@@ -318,97 +341,6 @@ namespace RebalancedMoons
 
                 InitMoons();
                 __instance.screenLevelVideoReel.Play();
-
-            }
-
-            [HarmonyPatch(typeof(ExtendedLevel), "SetExtendedDungeonFlowMatches")]
-            [HarmonyPostfix]
-            [HarmonyPriority(Priority.First)]
-            static void ExtendedLevelFlowsPostFix(ExtendedLevel __instance)
-            {
-                foreach (ExtendedDungeonFlow extendedFlow in PatchedContent.ExtendedDungeonFlows)
-                {
-                    var planetNames = extendedFlow.LevelMatchingProperties.planetNames;
-
-                    switch (extendedFlow.DungeonFlow.name)
-                    {
-                        case "Level1Flow3Exits":
-                            planetNames.Clear();
-                            break;
-
-                        case "Level1Flow":
-                            UpdateMoonInList(planetNames, "Titan", 140);
-                            AddMoonIfNotInList(planetNames, "March", 300);
-                            break;
-
-                        case "Level2Flow":
-                            UpdateMoonInList(planetNames, "Titan", 40);
-                            AddMoonIfNotInList(planetNames, "March", 5);
-                            break;
-
-                        case "Level3Flow":
-                            UpdateMoonInList(planetNames, "Dine", 50);
-                            UpdateMoonInList(planetNames, "Titan", 300);
-                            AddMoonIfNotInList(planetNames, "March", 190);
-                            break;
-                    }
-                }
-            }
-
-
-            static void UpdateMoonInList(List<StringWithRarity> planetNames, string planetName, int newRarity)
-            {
-                foreach (var planet in planetNames)
-                {
-                    if (planet.Name.Equals(planetName))
-                    {
-                        planet.Rarity = newRarity;
-                    }
-                }
-            }
-
-            static void AddMoonIfNotInList(List<StringWithRarity> planetNames, string planetName, int rarity)
-            {
-                if (!planetNames.Any(p => p.Name.Equals(planetName)))
-                {
-                    planetNames.Add(new StringWithRarity(planetName, rarity));
-                }
-            }
-
-
-            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
-            [HarmonyPriority(Priority.First)]
-            [HarmonyPrefix]
-            static void onGenerateNewFloorPrefix(RoundManager __instance)
-            {
-                foreach (ExtendedLevel levels in PatchedContent.ExtendedLevels)
-                {
-                    switch (levels.NumberlessPlanetName)
-                    {
-                        case "March":
-                            levels.SelectableLevel.factorySizeMultiplier = reMarchExtended.SelectableLevel.factorySizeMultiplier;
-                            break;
-                        case "Titan":
-                            levels.SelectableLevel.factorySizeMultiplier = reTitanExtended.SelectableLevel.factorySizeMultiplier;
-                            break;
-                    }
-                }
-            }
-
-            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
-            [HarmonyPrefix]
-            static void SubscribeToHandler()
-            {
-                ModNetworkHandler.SendLevelEvent += ReceivedLevelFromServer;
-                ModNetworkHandler.LevelEvent += ReceivedEventFromServer;
-            }
-
-            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.DespawnPropsAtEndOfRound))]
-            [HarmonyPostfix]
-            static void UnsubscribeFromHandler()
-            {
-                ModNetworkHandler.LevelEvent -= ReceivedEventFromServer;
-                ModNetworkHandler.SendLevelEvent -= ReceivedLevelFromServer;
             }
 
             public static void ReceivedEventFromServer(string eventName)
@@ -437,8 +369,25 @@ namespace RebalancedMoons
                 // Event Code Here
             }
 
+            public static void SendEventToClients(string eventName)
+            {
+                if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
+                    return;
+
+                ModNetworkHandler.Instance.EventClientRpc(eventName);
+            }
+
+            public static void SendLevelToClients(int extendedLevel, string eventName, string sceneName)
+            {
+                if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
+                    return;
+
+                ModNetworkHandler.Instance.LevelClientRpc(extendedLevel, eventName, sceneName);
+            }
+
             public static void ReceivedLevelFromServer(int extendedLevel, string eventName, string sceneName)
             {
+                Logger.LogDebug("anyone there?");
                 foreach (ExtendedLevel patchedLevel in PatchedContent.VanillaExtendedLevels)
                 {
                     if (patchedLevel.SelectableLevel.levelID.Equals(extendedLevel))
@@ -459,7 +408,7 @@ namespace RebalancedMoons
                                     { "Dine", "Level6Dine" },
                                     { "Titan", "Level8Titan" }
                                 };
-
+                                Logger.LogDebug("no sceneee");
                                 if (vanillaSceneMapping.TryGetValue(patchedLevel.NumberlessPlanetName, out var vanillaScene))
                                 {
                                     patchedLevel.SceneSelections.Clear();
@@ -471,21 +420,103 @@ namespace RebalancedMoons
                 }
             }
 
-            public static void SendEventToClients(string eventName)
+            [HarmonyPatch(typeof(ExtendedLevel), "SetExtendedDungeonFlowMatches")]
+            [HarmonyPostfix]
+            [HarmonyPriority(Priority.First)]
+            static void ExtendedLevelFlowsPostFix(ExtendedLevel __instance)
             {
-                if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
-                    return;
+                foreach (ExtendedDungeonFlow extendedFlow in PatchedContent.ExtendedDungeonFlows)
+                {
+                    switch (extendedFlow.DungeonFlow.name)
+                    {
+                        case "Level1Flow3Exits":
+                            {
+                                for (int i = extendedFlow.LevelMatchingProperties.planetNames.Count - 1; i >= 0; i--)
+                                {
+                                    if (extendedFlow.LevelMatchingProperties.planetNames[i].Name.Equals("March"))
+                                    {
+                                        extendedFlow.LevelMatchingProperties.planetNames.RemoveAt(i);
+                                    }
+                                }
+                                break;
+                            }
+                        case "Level1Flow":
+                            {
+                                for (int i = 0; i < extendedFlow.LevelMatchingProperties.planetNames.Count; i++)
+                                {
+                                    if (extendedFlow.LevelMatchingProperties.planetNames[i].Name.Equals("Titan"))
+                                    {
+                                        extendedFlow.LevelMatchingProperties.planetNames[i] = new StringWithRarity("Titan", 140);
+                                    }
+                                }
 
-                ModNetworkHandler.Instance.EventClientRpc(eventName);
+                                if (!extendedFlow.LevelMatchingProperties.planetNames.Any(p => p.Name.Equals("March")))
+                                {
+                                    extendedFlow.LevelMatchingProperties.planetNames.Add(new StringWithRarity("March", 300));
+                                }
+                                break;
+                            }
+                        case "Level2Flow":
+                            {
+                                for (int i = 0; i < extendedFlow.LevelMatchingProperties.planetNames.Count; i++)
+                                {
+                                    if (extendedFlow.LevelMatchingProperties.planetNames[i].Name.Equals("Titan"))
+                                    {
+                                        extendedFlow.LevelMatchingProperties.planetNames[i] = new StringWithRarity("Titan", 40);
+                                    }
+                                }
+
+                                if (!extendedFlow.LevelMatchingProperties.planetNames.Any(p => p.Name.Equals("March")))
+                                {
+                                    extendedFlow.LevelMatchingProperties.planetNames.Add(new StringWithRarity("March", 5));
+                                }
+                                break;
+                            }
+                        case "Level3Flow":
+                            {
+                                for (int i = 0; i < extendedFlow.LevelMatchingProperties.planetNames.Count; i++)
+                                {
+                                    if (extendedFlow.LevelMatchingProperties.planetNames[i].Name.Equals("Dine"))
+                                    {
+                                        extendedFlow.LevelMatchingProperties.planetNames[i] = new StringWithRarity("Dine", 50);
+                                    }
+                                    else if (extendedFlow.LevelMatchingProperties.planetNames[i].Name.Equals("Titan"))
+                                    {
+                                        extendedFlow.LevelMatchingProperties.planetNames[i] = new StringWithRarity("Titan", 300);
+
+                                    }
+                                }
+
+                                if (!extendedFlow.LevelMatchingProperties.planetNames.Any(p => p.Name.Equals("March")))
+                                {
+                                    extendedFlow.LevelMatchingProperties.planetNames.Add(new StringWithRarity("March", 190));
+                                }
+                                break;
+                            }
+                    }
+                }
             }
 
-            public static void SendLevelToClients(int extendedLevel, string eventName, string sceneName)
-            {
-                if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
-                    return;
 
-                ModNetworkHandler.Instance.LevelClientRpc(extendedLevel, eventName, sceneName);
+            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
+            [HarmonyPriority(Priority.First)]
+            [HarmonyPrefix]
+            static void onGenerateNewFloorPrefix(RoundManager __instance)
+            {
+                foreach (ExtendedLevel levels in PatchedContent.ExtendedLevels)
+                {
+                    switch (levels.NumberlessPlanetName)
+                    {
+                        case "March":
+                            levels.SelectableLevel.factorySizeMultiplier = reMarchExtended.SelectableLevel.factorySizeMultiplier;
+                            break;
+                        case "Titan":
+                            levels.SelectableLevel.factorySizeMultiplier = reTitanExtended.SelectableLevel.factorySizeMultiplier;
+                            break;
+                    }
+                }
             }
+
 
             [HarmonyPatch(typeof(TerminalManager), nameof(TerminalManager.GetExtendedLevelGroups))]
             [HarmonyPostfix]
