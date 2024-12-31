@@ -427,72 +427,54 @@ namespace RebalancedMoons
             {
                 foreach (ExtendedDungeonFlow extendedFlow in PatchedContent.ExtendedDungeonFlows)
                 {
+                    var planetNames = extendedFlow.LevelMatchingProperties.planetNames;
+
+                    void UpdatePlanetName(string targetName, StringWithRarity newNameWithRarity)
+                    {
+                        for (int i = 0; i < planetNames.Count; i++)
+                        {
+                            if (planetNames[i].Name.Equals(targetName))
+                            {
+                                planetNames[i] = newNameWithRarity;
+                            }
+                        }
+                    }
+
+                    void EnsurePlanetNameExists(string name, int rarity)
+                    {
+                        if (!planetNames.Any(p => p.Name.Equals(name)))
+                        {
+                            planetNames.Add(new StringWithRarity(name, rarity));
+                        }
+                    }
+
                     switch (extendedFlow.DungeonFlow.name)
                     {
                         case "Level1Flow3Exits":
+                            for (int i = planetNames.Count - 1; i >= 0; i--)
                             {
-                                for (int i = extendedFlow.LevelMatchingProperties.planetNames.Count - 1; i >= 0; i--)
+                                if (planetNames[i].Name.Equals("March"))
                                 {
-                                    if (extendedFlow.LevelMatchingProperties.planetNames[i].Name.Equals("March"))
-                                    {
-                                        extendedFlow.LevelMatchingProperties.planetNames.RemoveAt(i);
-                                    }
+                                    planetNames.RemoveAt(i);
                                 }
-                                break;
                             }
+                            break;
+
                         case "Level1Flow":
-                            {
-                                for (int i = 0; i < extendedFlow.LevelMatchingProperties.planetNames.Count; i++)
-                                {
-                                    if (extendedFlow.LevelMatchingProperties.planetNames[i].Name.Equals("Titan"))
-                                    {
-                                        extendedFlow.LevelMatchingProperties.planetNames[i] = new StringWithRarity("Titan", 140);
-                                    }
-                                }
+                            UpdatePlanetName("Titan", new StringWithRarity("Titan", 140));
+                            EnsurePlanetNameExists("March", 300);
+                            break;
 
-                                if (!extendedFlow.LevelMatchingProperties.planetNames.Any(p => p.Name.Equals("March")))
-                                {
-                                    extendedFlow.LevelMatchingProperties.planetNames.Add(new StringWithRarity("March", 300));
-                                }
-                                break;
-                            }
                         case "Level2Flow":
-                            {
-                                for (int i = 0; i < extendedFlow.LevelMatchingProperties.planetNames.Count; i++)
-                                {
-                                    if (extendedFlow.LevelMatchingProperties.planetNames[i].Name.Equals("Titan"))
-                                    {
-                                        extendedFlow.LevelMatchingProperties.planetNames[i] = new StringWithRarity("Titan", 40);
-                                    }
-                                }
+                            UpdatePlanetName("Titan", new StringWithRarity("Titan", 40));
+                            EnsurePlanetNameExists("March", 5);
+                            break;
 
-                                if (!extendedFlow.LevelMatchingProperties.planetNames.Any(p => p.Name.Equals("March")))
-                                {
-                                    extendedFlow.LevelMatchingProperties.planetNames.Add(new StringWithRarity("March", 5));
-                                }
-                                break;
-                            }
                         case "Level3Flow":
-                            {
-                                for (int i = 0; i < extendedFlow.LevelMatchingProperties.planetNames.Count; i++)
-                                {
-                                    if (extendedFlow.LevelMatchingProperties.planetNames[i].Name.Equals("Dine"))
-                                    {
-                                        extendedFlow.LevelMatchingProperties.planetNames[i] = new StringWithRarity("Dine", 50);
-                                    }
-                                    else if (extendedFlow.LevelMatchingProperties.planetNames[i].Name.Equals("Titan"))
-                                    {
-                                        extendedFlow.LevelMatchingProperties.planetNames[i] = new StringWithRarity("Titan", 300);
-
-                                    }
-                                }
-
-                                if (!extendedFlow.LevelMatchingProperties.planetNames.Any(p => p.Name.Equals("March")))
-                                {
-                                    extendedFlow.LevelMatchingProperties.planetNames.Add(new StringWithRarity("March", 190));
-                                }
-                                break;
-                            }
+                            UpdatePlanetName("Dine", new StringWithRarity("Dine", 50));
+                            UpdatePlanetName("Titan", new StringWithRarity("Titan", 300));
+                            EnsurePlanetNameExists("March", 190);
+                            break;
                     }
                 }
             }
