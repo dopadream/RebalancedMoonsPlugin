@@ -23,55 +23,37 @@ namespace RebalancedMoons
             base.OnNetworkSpawn();
         }
 
+        [ServerRpc(RequireOwnership = false)]
+        public void InteriorServerRpc()
+        {
+            if (ModConfig.configMarchDungeons.Value)
+                InteriorClientRpc("March");
+            if (ModConfig.configDineDungeons.Value)
+                InteriorClientRpc("Dine");
+            if (ModConfig.configTitanDungeons.Value)
+                InteriorClientRpc("Titan");
+        }
+
         [ClientRpc]
-        public void InteriorClientRpc(string name)
+        public void InteriorClientRpc(string moonName)
         {
             if (Plugin.rebalancedMoonsMod == null)
                 return;
 
-            foreach (ExtendedLevel level in PatchedContent.VanillaExtendedLevels)
-            {
-                switch (name)
-                {
-                    case "March":
-                        level.SelectableLevel.dungeonFlowTypes = Plugin.reMarchExtended.SelectableLevel.dungeonFlowTypes;
-                        level.SelectableLevel.factorySizeMultiplier = Plugin.reMarchExtended.SelectableLevel.factorySizeMultiplier;
-                        break;
-                    case "Dine":
-                        level.SelectableLevel.dungeonFlowTypes = Plugin.reDineExtended.SelectableLevel.dungeonFlowTypes;
-                        break;
-                    case "Titan":
-                        level.SelectableLevel.dungeonFlowTypes = Plugin.reTitanExtended.SelectableLevel.dungeonFlowTypes;
-                        level.SelectableLevel.factorySizeMultiplier = Plugin.reTitanExtended.SelectableLevel.factorySizeMultiplier;
-                        break;
-                }
-            }
+            Plugin.RebalancedMoonsPatches.initInteriors(moonName);
         }
 
         [ClientRpc]
-        public void DeactivateBridgeClientRpc()
+        public void DeactivateObjectClientRpc(string name)
         {
-            foreach (GameObject bridgeObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("DangerousBridge")))
+            foreach (GameObject gameObject in FindObjectsByType<GameObject>(sortMode: FindObjectsSortMode.None).Where(obj => obj.gameObject.name.StartsWith(name)))
             {
-                if (bridgeObject != null)
+                if (gameObject != null)
                 {
-                    bridgeObject.SetActive(false);
+                    gameObject.SetActive(false);
                 }
             }
         }
-
-        [ClientRpc]
-        public void DeactivateTitanFireClientRpc()
-        {
-            foreach (GameObject fireExitObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("FireExitDoorContainerD")))
-            {
-                if (fireExitObject != null)
-                {
-                    fireExitObject.SetActive(false);
-                }
-            }
-        }
-
 
         [ClientRpc]
         public void LevelClientRpc(int extendedLevel, string eventName, string sceneName)
