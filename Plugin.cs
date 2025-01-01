@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -183,19 +184,16 @@ namespace RebalancedMoons
                 {
                     if (snowyProfile == null || embyProfile == null)
                     {
-                        if (snowyProfile == null || embyProfile == null)
+                        try
                         {
-                            try
-                            {
-                                AssetBundle hdriSkies = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "hdri_skies"));
-                                snowyProfile = hdriSkies.LoadAsset<VolumeProfile>("ReSnowyFog");
-                                embyProfile = hdriSkies.LoadAsset<VolumeProfile>("EmbrionSky");
-                            }
-                            catch
-                            {
-                                Plugin.Logger.LogError("Encountered some error loading assets from bundle \"hdri_skies\". Did you install the plugin correctly?");
-                                return;
-                            }
+                            AssetBundle hdriSkies = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "hdri_skies"));
+                            snowyProfile = hdriSkies.LoadAsset<VolumeProfile>("ReSnowyFog");
+                            embyProfile = hdriSkies.LoadAsset<VolumeProfile>("EmbrionSky");
+                        }
+                        catch
+                        {
+                            Plugin.Logger.LogError("Encountered some error loading assets from bundle \"hdri_skies\". Did you install the plugin correctly?");
+                            return;
                         }
                     }
 
@@ -476,6 +474,35 @@ namespace RebalancedMoons
                             EnsurePlanetNameExists("March", 190);
                             break;
                     }
+                }
+            }
+
+            [HarmonyPatch(typeof(LethalLevelLoaderNetworkManager), (nameof(LethalLevelLoaderNetworkManager.SetRandomExtendedDungeonFlowClientRpc)))]
+            public static class YourClassName_SetRandomExtendedDungeonFlowClientRpc_Patch
+            {
+                static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+                {
+                    var code = new List<CodeInstruction>(instructions);
+                    var targetMethod = typeof(List<IntWithRarity>).GetMethod("AddRange"); // Example method you might want to replace
+
+                    for (int i = 0; i < code.Count; i++)
+                    {
+                        if (code[i].opcode == OpCodes.Stfld && code[i - 1].operand.ToString().Contains("cachedDungeonFlowsList"))
+                        {
+                            // Insert your replacement code here or modify as needed
+                            code[i] = new CodeInstruction(OpCodes.Call, typeof(CustomClass).GetMethod("YourReplacementMethod"));
+                        }
+                    }
+
+                    return code.AsEnumerable();
+                }
+            }
+
+            public static class CustomClass
+            {
+                public static void YourReplacementMethod(/* Parameters if needed */)
+                {
+                    // Logic to replace or modify the behavior of cachedDungeonFlowsList
                 }
             }
 
