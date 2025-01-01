@@ -239,7 +239,7 @@ namespace RebalancedMoons
         internal class RebalancedMoonsPatches
         {
 
-
+  
             static void InitMoons()
             {
                 if (!LethalLevelLoader.Plugin.IsSetupComplete)
@@ -350,7 +350,7 @@ namespace RebalancedMoons
                         {
                             if (fireExitObject != null)
                             {
-                                fireExitObject.SetActive(false);
+                                Destroy(fireExitObject);
                             }
                         }
                         break;
@@ -359,7 +359,7 @@ namespace RebalancedMoons
                         {
                             if (bridgeObject != null)
                             {
-                                bridgeObject.SetActive(false);
+                                Destroy(bridgeObject);
                             }
                         }
                         break;
@@ -475,37 +475,46 @@ namespace RebalancedMoons
                             break;
                     }
                 }
+
             }
 
-            [HarmonyPatch(typeof(LethalLevelLoaderNetworkManager), (nameof(LethalLevelLoaderNetworkManager.SetRandomExtendedDungeonFlowClientRpc)))]
-            public static class YourClassName_SetRandomExtendedDungeonFlowClientRpc_Patch
+            // this doesn't work yet, it throws a null reference error when you pull the ship lever. im too sick to figure this out :(
+
+            [HarmonyPatch(typeof(LethalLevelLoaderNetworkManager), nameof(LethalLevelLoaderNetworkManager.SetRandomExtendedDungeonFlowClientRpc))]
+            [HarmonyTranspiler]
+            private static IEnumerable<CodeInstruction> ChangeClientDungeonSelections(IEnumerable<CodeInstruction> instructions)
             {
-                static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-                {
-                    var code = new List<CodeInstruction>(instructions);
-                    var targetMethod = typeof(List<IntWithRarity>).GetMethod("AddRange"); // Example method you might want to replace
+                CodeMatcher codeMatcher = new CodeMatcher(instructions)
+                    .MatchForward(true,
+                        new CodeMatch(OpCodes.Stfld, AccessTools.Field(typeof(SelectableLevel), "dungeonFlowTypes"))).Advance(1)
+                    .SetInstruction(
+                        new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RebalancedMoonsPatches), nameof(SetDungeonFlowTypes)))
+                    );
 
-                    for (int i = 0; i < code.Count; i++)
-                    {
-                        if (code[i].opcode == OpCodes.Stfld && code[i - 1].operand.ToString().Contains("cachedDungeonFlowsList"))
-                        {
-                            // Insert your replacement code here or modify as needed
-                            code[i] = new CodeInstruction(OpCodes.Call, typeof(CustomClass).GetMethod("YourReplacementMethod"));
-                        }
-                    }
-
-                    return code.AsEnumerable();
-                }
+                return codeMatcher.InstructionEnumeration();
             }
 
-            public static class CustomClass
+            public static IntWithRarity[] SetDungeonFlowTypes()
             {
-                public static void YourReplacementMethod(/* Parameters if needed */)
-                {
-                    // Logic to replace or modify the behavior of cachedDungeonFlowsList
-                }
-            }
 
+                if (LevelManager.CurrentExtendedLevel.NumberlessPlanetName.StartsWith("March"))
+                {
+                    return reMarchExtended.SelectableLevel.dungeonFlowTypes;
+                }
+                else if (LevelManager.CurrentExtendedLevel.NumberlessPlanetName.StartsWith("Dine"))
+                {
+                    return reDineExtended.SelectableLevel.dungeonFlowTypes;
+                }
+                else if (LevelManager.CurrentExtendedLevel.NumberlessPlanetName.StartsWith("Titan"))
+                {
+                    return reTitanExtended.SelectableLevel.dungeonFlowTypes;
+                }
+                else
+                {
+                    return LevelManager.CurrentExtendedLevel.SelectableLevel.dungeonFlowTypes;
+                }
+                //i know this is messy ill optimize it later
+            }
 
             [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
             [HarmonyPriority(Priority.First)]
