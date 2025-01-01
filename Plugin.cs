@@ -180,7 +180,7 @@ namespace RebalancedMoons
         {
             if (ModConfig.configHDRISkies.Value)
             {
-                foreach (Volume volume in FindObjectsOfType<Volume>())
+                foreach (Volume volume in FindObjectsByType<Volume>(FindObjectsSortMode.None))
                 {
                     if (snowyProfile == null || embyProfile == null)
                     {
