@@ -40,7 +40,7 @@ namespace RebalancedMoons
             if (Plugin.rebalancedMoonsMod == null)
                 return;
 
-            Plugin.RebalancedMoonsPatches.initInteriors(moonName);
+            Plugin.RebalancedMoonsPatches.InitInteriors(moonName);
         }
 
         [ClientRpc]

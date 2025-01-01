@@ -9,7 +9,7 @@ namespace RebalancedMoons
     {
         [HarmonyPatch(typeof(Chameleon.SceneOverrides), nameof(Chameleon.SceneOverrides.SetUpFancyEntranceDoors))]
         [HarmonyPrefix]
-        static void onApplyCosmeticInfoPostfix(ref LevelCosmeticInfo levelCosmeticInfo)
+        static void OnApplyCosmeticInfoPostfix(ref LevelCosmeticInfo levelCosmeticInfo)
         {
             string levelName = StartOfRound.Instance.currentLevel.name;
             if (levelName == "DineLevel")

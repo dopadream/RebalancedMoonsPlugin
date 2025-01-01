@@ -369,7 +369,7 @@ namespace RebalancedMoons
             [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
             [HarmonyPriority(250)]
             [HarmonyPrefix]
-            static void onGenerateNewFloorPrefix(RoundManager __instance)
+            static void OnGenerateNewFloorPrefix(RoundManager __instance)
             {
                 if ((NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
                 {
@@ -403,7 +403,7 @@ namespace RebalancedMoons
 
             [HarmonyPatch(typeof(TerminalManager), nameof(TerminalManager.GetExtendedLevelGroups))]
             [HarmonyPostfix]
-            static void onGetExtendedLevelGroupsPostfix(ref List<ExtendedLevelGroup> __result)
+            static void OnGetExtendedLevelGroupsPostfix(ref List<ExtendedLevelGroup> __result)
             {
                 List<ExtendedLevelGroup> newList = new List<ExtendedLevelGroup>();
                 if (rebalancedMoonsMod != null)
