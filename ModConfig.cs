@@ -43,13 +43,13 @@ namespace RebalancedMoons
                 new ConfigDescription("Replaces Titan with a new scene using LLL."));
 
             configMarchDungeons = cfg.Bind("Server", "March Interior Overrides", true,
-                new ConfigDescription("Overrides the interior selections on March to include all vanilla interiors."));
+                new ConfigDescription("REQUIRES RESTART WHEN DISABLING INGAME - Overrides the interior selections on March to include all vanilla interiors."));
 
             configDineDungeons = cfg.Bind("Server", "Dine Interior Overrides", true,
-                new ConfigDescription("Overrides the interior selections on Dine to make Mineshaft less common."));
+                new ConfigDescription("REQUIRES RESTART WHEN DISABLING INGAME - Overrides the interior selections on Dine to make Mineshaft less common."));
 
             configTitanDungeons = cfg.Bind("Server", "Titan Interior Overrides", true,
-                new ConfigDescription("Overrides the interior selections on Titan to make Mineshaft significantly more common."));
+                new ConfigDescription("REQUIRES RESTART WHEN DISABLING INGAME - Overrides the interior selections on Titan to make Mineshaft significantly more common."));
 
 
             // --misc settings--
