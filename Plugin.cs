@@ -273,10 +273,10 @@ namespace RebalancedMoons
             {
                 ModNetworkHandler.SendLevelEvent += ReceivedLevelFromServer;
                 ModNetworkHandler.Instance.InteriorServerRpc();
-                setupLobby(StartOfRound.Instance);
+                SetupLobby(StartOfRound.Instance);
             }
 
-            public static void initInteriors(string name)
+            public static void InitInteriors(string name)
             {
                 foreach (ExtendedLevel level in PatchedContent.VanillaExtendedLevels)
                 {
@@ -302,10 +302,10 @@ namespace RebalancedMoons
             [HarmonyPostfix]
             static void ClientConnectPostFix(StartOfRound __instance)
             {
-                setupLobby(__instance);
+                SetupLobby(__instance);
             }
 
-            static void setupLobby(StartOfRound __instance)
+            static void SetupLobby(StartOfRound __instance)
             {
 
                 foreach (SelectableLevel level in __instance.levels)
@@ -374,11 +374,11 @@ namespace RebalancedMoons
                 if ((NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
                 {
                     if (ModConfig.configMarchDungeons.Value)
-                        initInteriors("March");
+                        InitInteriors("March");
                     if (ModConfig.configDineDungeons.Value)
-                        initInteriors("Dine");
+                        InitInteriors("Dine");
                     if (ModConfig.configTitanDungeons.Value)
-                        initInteriors("Titan");
+                        InitInteriors("Titan");
 
                     if (!ModConfig.configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel != null)
                     {
