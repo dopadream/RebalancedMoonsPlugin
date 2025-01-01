@@ -117,7 +117,7 @@ namespace RebalancedMoons
                     if (StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && ModConfig.configTitanScene.Value)
                     {
                         Plugin.Logger.LogDebug("Rebalanced Titan loaded, destroying 3rd fire exit...");
-                        RebalancedMoonsPatches.SendEventToClients("ExitEvent");
+                        ModNetworkHandler.Instance.DeactivateTitanFireClientRpc();
                     }
                 }
 
@@ -126,7 +126,7 @@ namespace RebalancedMoons
                     if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && ModConfig.configMarchScene.Value)
                     {
                         Plugin.Logger.LogDebug("Rebalanced March loaded, destroying rickety bridge...");
-                        RebalancedMoonsPatches.SendEventToClients("BridgeEvent");
+                        ModNetworkHandler.Instance.DeactivateBridgeClientRpc();
                     }
                 }
             }
@@ -239,7 +239,7 @@ namespace RebalancedMoons
         internal class RebalancedMoonsPatches
         {
 
-  
+
             static void InitMoons()
             {
                 if (!LethalLevelLoader.Plugin.IsSetupComplete)
@@ -301,16 +301,7 @@ namespace RebalancedMoons
             static void SubscribeToHandler()
             {
                 ModNetworkHandler.SendLevelEvent += ReceivedLevelFromServer;
-                ModNetworkHandler.LevelEvent += ReceivedEventFromServer;
                 setupLobby(StartOfRound.Instance);
-            }
-
-            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.DespawnPropsAtEndOfRound))]
-            [HarmonyPostfix]
-            static void UnsubscribeFromHandler()
-            {
-                ModNetworkHandler.LevelEvent -= ReceivedEventFromServer;
-                ModNetworkHandler.SendLevelEvent -= ReceivedLevelFromServer;
             }
 
 
@@ -339,40 +330,6 @@ namespace RebalancedMoons
 
                 InitMoons();
                 __instance.screenLevelVideoReel.Play();
-            }
-
-            public static void ReceivedEventFromServer(string eventName)
-            {
-                switch (eventName)
-                {
-                    case "ExitEvent":
-                        foreach (GameObject fireExitObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("FireExitDoorContainerD")))
-                        {
-                            if (fireExitObject != null)
-                            {
-                                Destroy(fireExitObject);
-                            }
-                        }
-                        break;
-                    case "BridgeEvent":
-                        foreach (GameObject bridgeObject in FindObjectsOfType<GameObject>().Where(obj => obj.gameObject.name.StartsWith("DangerousBridge")))
-                        {
-                            if (bridgeObject != null)
-                            {
-                                Destroy(bridgeObject);
-                            }
-                        }
-                        break;
-                }
-                // Event Code Here
-            }
-
-            public static void SendEventToClients(string eventName)
-            {
-                if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
-                    return;
-
-                ModNetworkHandler.Instance.EventClientRpc(eventName);
             }
 
             public static void SendLevelToClients(int extendedLevel, string eventName, string sceneName)
@@ -478,61 +435,23 @@ namespace RebalancedMoons
 
             }
 
-            // this doesn't work yet, it throws a null reference error when you pull the ship lever. im too sick to figure this out :(
 
-            [HarmonyPatch(typeof(LethalLevelLoaderNetworkManager), nameof(LethalLevelLoaderNetworkManager.SetRandomExtendedDungeonFlowClientRpc))]
-            [HarmonyTranspiler]
-            private static IEnumerable<CodeInstruction> ChangeClientDungeonSelections(IEnumerable<CodeInstruction> instructions)
-            {
-                CodeMatcher codeMatcher = new CodeMatcher(instructions)
-                    .MatchForward(true,
-                        new CodeMatch(OpCodes.Stfld, AccessTools.Field(typeof(SelectableLevel), "dungeonFlowTypes"))).Advance(1)
-                    .SetInstruction(
-                        new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RebalancedMoonsPatches), nameof(SetDungeonFlowTypes)))
-                    );
-
-                return codeMatcher.InstructionEnumeration();
-            }
-
-            public static IntWithRarity[] SetDungeonFlowTypes()
-            {
-
-                if (LevelManager.CurrentExtendedLevel.NumberlessPlanetName.StartsWith("March"))
-                {
-                    return reMarchExtended.SelectableLevel.dungeonFlowTypes;
-                }
-                else if (LevelManager.CurrentExtendedLevel.NumberlessPlanetName.StartsWith("Dine"))
-                {
-                    return reDineExtended.SelectableLevel.dungeonFlowTypes;
-                }
-                else if (LevelManager.CurrentExtendedLevel.NumberlessPlanetName.StartsWith("Titan"))
-                {
-                    return reTitanExtended.SelectableLevel.dungeonFlowTypes;
-                }
-                else
-                {
-                    return LevelManager.CurrentExtendedLevel.SelectableLevel.dungeonFlowTypes;
-                }
-                //i know this is messy ill optimize it later
-            }
 
             [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
-            [HarmonyPriority(Priority.First)]
+            [HarmonyPriority(250)]
             [HarmonyPrefix]
             static void onGenerateNewFloorPrefix(RoundManager __instance)
             {
-                foreach (ExtendedLevel levels in PatchedContent.ExtendedLevels)
-                {
-                    switch (levels.NumberlessPlanetName)
-                    {
-                        case "March":
-                            levels.SelectableLevel.factorySizeMultiplier = reMarchExtended.SelectableLevel.factorySizeMultiplier;
-                            break;
-                        case "Titan":
-                            levels.SelectableLevel.factorySizeMultiplier = reTitanExtended.SelectableLevel.factorySizeMultiplier;
-                            break;
-                    }
-                }
+                if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
+                    return;
+
+                if (ModConfig.configMarchDungeons.Value)
+                    ModNetworkHandler.Instance.InteriorClientRpc("March");
+                if (ModConfig.configDineDungeons.Value)
+                    ModNetworkHandler.Instance.InteriorClientRpc("Dine");
+                if (ModConfig.configTitanDungeons.Value)
+                    ModNetworkHandler.Instance.InteriorClientRpc("Titan");
+
             }
 
 

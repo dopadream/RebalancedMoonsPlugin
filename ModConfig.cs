@@ -10,6 +10,7 @@ namespace RebalancedMoons
         internal static ConfigEntry<bool> configHDRISkies;
         internal static ConfigEntry<bool> configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene;
         internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
+        internal static ConfigEntry<bool> configMarchDungeons, configDineDungeons, configTitanDungeons;
         internal static ConfigEntry<string> configMoonEntries;
         internal static void Init(ConfigFile cfg)
         {
@@ -40,6 +41,16 @@ namespace RebalancedMoons
 
             configTitanScene = cfg.Bind("Server", "Titan Scene Overrides", true,
                 new ConfigDescription("Replaces Titan with a new scene using LLL."));
+
+            configMarchDungeons = cfg.Bind("Server", "March Interior Overrides", true,
+                new ConfigDescription("Overrides the interior selections on March to include all vanilla interiors."));
+
+            configDineDungeons = cfg.Bind("Server", "Dine Interior Overrides", true,
+                new ConfigDescription("Overrides the interior selections on Dine to make Mineshaft less common."));
+
+            configTitanDungeons = cfg.Bind("Server", "Titan Interior Overrides", true,
+                new ConfigDescription("Overrides the interior selections on Titan to make Mineshaft significantly more common."));
+
 
             // --misc settings--
 

@@ -10,7 +10,6 @@ namespace RebalancedMoons
     internal class NetworkObjectManager
     {
 
-        public static AssetBundle assetBundle;
         static GameObject networkPrefab;
 
         [HarmonyPatch(typeof(GameNetworkManager), nameof(GameNetworkManager.Start))]
