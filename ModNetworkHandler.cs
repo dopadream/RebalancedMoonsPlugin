@@ -55,7 +55,7 @@ namespace RebalancedMoons
                 switch (extendedFlow.DungeonFlow.name)
                 {
                     case "Level1Flow3Exits":
-                        planetNames.RemoveAll(p => p.Name.Equals("March"));
+                        planetNames.RemoveAll(p => p.Name.Equals("March") && name.Equals("March"));
                         break;
 
                     case "Level1Flow":
