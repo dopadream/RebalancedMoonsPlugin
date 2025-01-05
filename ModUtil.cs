@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine;
 
@@ -15,6 +13,11 @@ namespace RebalancedMoons
                 foreach (T component in sceneObject.GetComponentsInChildren<T>())
                     returnList.Add(component);
             return (returnList);
+        }
+
+        public static void initSceneOverrides()
+        {
+            Plugin.ApplySky();
         }
     }
 }

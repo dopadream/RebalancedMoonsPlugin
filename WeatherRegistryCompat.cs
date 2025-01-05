@@ -1,12 +1,6 @@
-﻿using BepInEx.Bootstrap;
-using HarmonyLib;
-using System;
-using System.Collections.Generic;
+﻿using HarmonyLib;
 using System.Linq;
-using System.Text;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using WeatherRegistry;
 
 namespace RebalancedMoons
 {
@@ -22,7 +16,7 @@ namespace RebalancedMoons
 
         static void initWeatherTweaksCompat(RoundManager instance)
         {
-            if (instance.currentLevel.name.Equals("TitanLevel") && WeatherManager.GetCurrentLevelWeather().Name.Equals("Blackout"))
+            if (instance.currentLevel.name.Equals("TitanLevel") && WeatherRegistry.WeatherManager.GetCurrentLevelWeather().Name.Equals("Blackout"))
             {
                 Plugin.Logger.LogDebug("Titan Blackout detected, turning the evil fire exit off...");
                 foreach (AudioSource audioSource in ModUtil.SearchInLatestScene<AudioSource>().Where(aud => aud.gameObject.name == "BrokenLight"))

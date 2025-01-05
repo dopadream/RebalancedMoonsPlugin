@@ -21,7 +21,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.0", WEATHER_REGISTRY = "mrov.WeatherRegistry", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.2", WEATHER_REGISTRY = "mrov.WeatherRegistry", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
@@ -63,15 +63,13 @@ namespace RebalancedMoons
                 harmony.PatchAll(typeof(WeatherRegistryCompat));
             }
 
-            SceneManager.sceneLoaded += delegate
-            {
-                ApplySky();
-            };
+
 
 
             Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");
 
         }
+
 
         private static void NetcodePatcher()
         {
@@ -148,7 +146,6 @@ namespace RebalancedMoons
 
             Logger.LogDebug("Rebalances applied for " + input + "!");
         }
-
         internal static void ApplySky()
         {
             if (ModConfig.configHDRISkies.Value)
@@ -198,10 +195,13 @@ namespace RebalancedMoons
                     {
                         Plugin.Logger.LogInfo($"Applying profile '{profile}' to Volume {volume.name}.");
 
-                        if (profile.Equals("SnowyProfile"))
-                            volume.sharedProfile = snowyProfile;
-                        else if (profile.Equals("EmbyProfile"))
-                            volume.sharedProfile = embyProfile;
+                        if (volume.name.Equals("Sky and Fog Global Volume"))
+                        {
+                            if (profile.Equals("SnowyProfile"))
+                                volume.sharedProfile = snowyProfile;
+                            else if (profile.Equals("EmbyProfile"))
+                                volume.sharedProfile = embyProfile;
+                        }
                     }
                 }
             }
@@ -271,31 +271,18 @@ namespace RebalancedMoons
             [HarmonyPostfix]
             static void SubscribeToHandler()
             {
-                ModNetworkHandler.SendLevelEvent += ReceivedLevelFromServer;
-                ModNetworkHandler.Instance.InteriorServerRpc();
+                ModNetworkHandler.SendLevelEvent += RebalancedMoonsPatches.ReceivedLevelFromServer;
                 SetupLobby(StartOfRound.Instance);
+                ModNetworkHandler.Instance.InteriorServerRpc();
             }
 
-            public static void InitInteriors(string name)
+            [HarmonyPatch(typeof(QuickMenuManager), nameof(QuickMenuManager.LeaveGameConfirm))]
+            [HarmonyPostfix]
+            static void UnsubscribeFromHandler()
             {
-                foreach (ExtendedLevel level in PatchedContent.VanillaExtendedLevels)
-                {
-                    switch (name)
-                    {
-                        case "March":
-                            level.SelectableLevel.dungeonFlowTypes = reMarchExtended.SelectableLevel.dungeonFlowTypes;
-                            level.SelectableLevel.factorySizeMultiplier = reMarchExtended.SelectableLevel.factorySizeMultiplier;
-                            break;
-                        case "Dine":
-                            level.SelectableLevel.dungeonFlowTypes = reDineExtended.SelectableLevel.dungeonFlowTypes;
-                            break;
-                        case "Titan":
-                            level.SelectableLevel.dungeonFlowTypes = reTitanExtended.SelectableLevel.dungeonFlowTypes;
-                            level.SelectableLevel.factorySizeMultiplier = reTitanExtended.SelectableLevel.factorySizeMultiplier;
-                            break;
-                    }
-                }
+                ModNetworkHandler.SendLevelEvent -= RebalancedMoonsPatches.ReceivedLevelFromServer;
             }
+
 
 
             [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.OnClientConnect))]
@@ -343,20 +330,22 @@ namespace RebalancedMoons
                         switch (eventName)
                         {
                             case "RBMSceneEvent":
+                                patchedLevel.SelectableLevel.sceneName = sceneName;
                                 patchedLevel.SceneSelections.Clear();
                                 patchedLevel.SceneSelections.Add(new StringWithRarity(sceneName, 100));
                                 break;
                             case "VanillaSceneEvent":
                                 var vanillaSceneMapping = new Dictionary<string, string>
                                 {
-                                    { "Offense", "Level7Offense" },
-                                    { "March", "Level4March" },
-                                    { "Adamance", "Level10Adamance" },
-                                    { "Dine", "Level6Dine" },
-                                    { "Titan", "Level8Titan" }
+                                    { "ReOffenseScene", "Level7Offense" },
+                                    { "ReMarchLevel", "Level4March" },
+                                    { "ReAdamanceScene", "Level10Adamance" },
+                                    { "ReDineScene", "Level6Dine" },
+                                    { "ReTitanScene", "Level8Titan" }
                                 };
-                                if (vanillaSceneMapping.TryGetValue(patchedLevel.NumberlessPlanetName, out var vanillaScene))
+                                if (vanillaSceneMapping.TryGetValue(patchedLevel.SelectableLevel.sceneName, out var vanillaScene))
                                 {
+                                    patchedLevel.SelectableLevel.sceneName = sceneName;
                                     patchedLevel.SceneSelections.Clear();
                                     patchedLevel.SceneSelections.Add(new StringWithRarity(vanillaScene, 100));
                                 }
@@ -367,25 +356,20 @@ namespace RebalancedMoons
             }
 
             [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
-            [HarmonyPriority(250)]
+            [HarmonyPriority(Priority.First)]
             [HarmonyPrefix]
             static void OnGenerateNewFloorPrefix(RoundManager __instance)
             {
+                ModUtil.initSceneOverrides();
                 if ((NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
                 {
-                    if (ModConfig.configMarchDungeons.Value)
-                        InitInteriors("March");
-                    if (ModConfig.configDineDungeons.Value)
-                        InitInteriors("Dine");
-                    if (ModConfig.configTitanDungeons.Value)
-                        InitInteriors("Titan");
 
                     if (!ModConfig.configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel != null)
                     {
                         if (StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && ModConfig.configTitanScene.Value)
                         {
                             Plugin.Logger.LogDebug("Rebalanced Titan loaded, destroying 3rd fire exit...");
-                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("FireExitDoorContainerD");
+                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Teleports/FireExitDoorContainerD");
                         }
                     }
 
@@ -394,7 +378,7 @@ namespace RebalancedMoons
                         if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && ModConfig.configMarchScene.Value)
                         {
                             Plugin.Logger.LogDebug("Rebalanced March loaded, destroying rickety bridge...");
-                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("DangerousBridge");
+                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/DangerousBridge");
                         }
                     }
                 }
