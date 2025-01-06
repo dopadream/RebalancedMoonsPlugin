@@ -1,6 +1,6 @@
 # Rebalanced Moons BETA
 
-This mod uses LethalLevelLoader to update some of the vanilla moons to hopefully create a more streamlined progression experience and rebalance some moons that we considered unfit normally. Offense, March, and Dine have been reworked, with minor adjustments to other moons such as Assurance and Titan. This is currently very early in development and many things are subject to change. 
+This mod updates some of the vanilla moons, utilizing LethalLevelLoader to replace some, and adjusting the stats of others. The goal is to make the game have a more streamlined progression experience and make some of the more underwhelming moons more fun to route to.
 
 # List of changes
 - Offense now has an alternate, but long route that you can take to get to fire exit. There's a new silo on the map that marks where you need to go.
@@ -12,7 +12,7 @@ This mod uses LethalLevelLoader to update some of the vanilla moons to hopefully
 - March now has a water tower hinting at the back fire exit's location.
 - Don't cross the rickety bridge on March.. You'll get lost!
 - March can now spawn other vanilla interiors by default.
-- March's facility size was decreased to 1.75.
+- March's facility size was decreased to 1.8.
 - Titan can now spawn gold bars.
 - Titan's facility size was decreased to 2 (but also has less traps to compensate)
 - Titan's spawn curve was adjusted to be a bit more forgiving.
