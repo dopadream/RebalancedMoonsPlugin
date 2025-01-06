@@ -1,10 +1,30 @@
-﻿using HarmonyLib;
+﻿using BepInEx;
+using BepInEx.Logging;
+using HarmonyLib;
 using UnityEngine;
 
-namespace RebalancedMoons
+namespace RebalancedMoons.ChameleonCompat
 {
-    [HarmonyPatch]
-    internal class ChameleonCompat
+    [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
+    [BepInDependency(CHAMELEON, BepInDependency.DependencyFlags.HardDependency)]
+
+    public class Plugin : BaseUnityPlugin
+    {
+        const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons.chameleoncompat", PLUGIN_NAME = "RebalancedMoonsChameleonCompat", PLUGIN_VERSION = "0.0.1", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
+        internal static new ManualLogSource Logger;
+
+        void Awake()
+        {
+            Logger = base.Logger;
+
+            new Harmony(PLUGIN_GUID).PatchAll();
+
+            Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");
+        }
+    }
+
+    [HarmonyPatch]  
+    internal class ChameleonCompatPatches
     {
         [HarmonyPatch(typeof(Chameleon.SceneOverrides), nameof(Chameleon.SceneOverrides.SetUpFancyEntranceDoors))]
         [HarmonyPrefix]

@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
+using DunGen;
 using HarmonyLib;
 using LethalLevelLoader;
 using System;
@@ -11,17 +12,16 @@ using System.Reflection;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.SceneManagement;
+using static DunGen.Graph.DungeonFlow;
 
 namespace RebalancedMoons
 {
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     [BepInDependency(WEATHER_REGISTRY, BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(CHAMELEON, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.2", WEATHER_REGISTRY = "mrov.WeatherRegistry", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.2", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
@@ -52,11 +52,6 @@ namespace RebalancedMoons
 
             harmony.PatchAll(typeof(NetworkObjectManager));
             harmony.PatchAll(typeof(RebalancedMoonsPatches));
-
-            if (Chainloader.PluginInfos.ContainsKey(CHAMELEON))
-            {
-                harmony.PatchAll(typeof(ChameleonCompat));
-            }
 
             if (Chainloader.PluginInfos.ContainsKey(WEATHER_REGISTRY))
             {
@@ -208,7 +203,7 @@ namespace RebalancedMoons
         }
 
 
-        [HarmonyPatch]
+
         internal class RebalancedMoonsPatches
         {
 
@@ -350,6 +345,23 @@ namespace RebalancedMoons
                                     patchedLevel.SceneSelections.Add(new StringWithRarity(vanillaScene, 100));
                                 }
                                 break;
+                        }
+                    }
+                }
+            }
+
+            [HarmonyPatch(typeof(DungeonLoader), nameof(DungeonLoader.PatchFireEscapes))]
+            [HarmonyPostfix]
+            static void OnPatchFireEscapesPostfix(ref DungeonGenerator dungeonGenerator)
+            {
+                if (StartOfRound.Instance.currentLevel.PlanetName.Contains("Titan") && !ModConfig.configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel.sceneName == "ReTitanScene")
+                {
+                    foreach (GlobalPropSettings globalPropSettings in dungeonGenerator.DungeonFlow.GlobalProps)
+                    {
+                        if (globalPropSettings.ID == 1231)
+                        {
+                            globalPropSettings.Count = new (2, 2);
+                            break;
                         }
                     }
                 }

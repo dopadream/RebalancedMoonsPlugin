@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <AssemblyName>RebalancedMoons</AssemblyName>
+    <AssemblyName>RebalancedMoons.ChameleonCompat</AssemblyName>
     <Description>Rebalances/reworks some of the vanilla moons.</Description>
-    <Version>1.5.2</Version>
+    <Version>0.0.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
@@ -12,14 +12,8 @@
       https://nuget.bepinex.dev/v3/index.json;
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <RootNamespace>RebalancedMoons</RootNamespace>
+    <RootNamespace>RebalancedMoons.ChameleonCompat</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="ChameleonCompat\**" />
-    <EmbeddedResource Remove="ChameleonCompat\**" />
-    <None Remove="ChameleonCompat\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
@@ -37,7 +31,7 @@
   </ItemGroup>
 
   <Target Name="NetcodePatch" AfterTargets="PostBuildEvent">
-    <Exec Command="netcode-patch &quot;$(TargetPath)&quot; @(ReferencePathWithRefAssemblies->'&quot;%(Identity)&quot;', ' ')" />
+    <Exec Command="netcode-patch &quot;$(TargetPath)&quot; @(ReferencePathWithRefAssemblies->'&quot;%(Identity)&quot;', ' ')"/>
   </Target>
   
   <ItemGroup>

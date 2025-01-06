@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace RebalancedMoons
 {
-    [HarmonyPatch]
+
     internal class NetworkObjectManager
     {
 

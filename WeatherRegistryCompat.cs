@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace RebalancedMoons
 {
-    [HarmonyPatch]
+
     internal class WeatherRegistryCompat
     {
         [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.LoadNewLevel))]
