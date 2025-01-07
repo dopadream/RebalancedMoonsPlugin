@@ -21,7 +21,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.2", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.3", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
@@ -258,7 +258,8 @@ namespace RebalancedMoons
 
                 if (planetSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out bool configValue))
                 {
-                    SendLevelToClients(extendedLevel.SelectableLevel.levelID, "RBMSceneEvent", sceneName);
+                    if (configValue)
+                        SendLevelToClients(extendedLevel.SelectableLevel.levelID, "RBMSceneEvent", sceneName);
                 }
             }
 
@@ -317,7 +318,6 @@ namespace RebalancedMoons
 
             public static void ReceivedLevelFromServer(int extendedLevel, string eventName, string sceneName)
             {
-                Logger.LogDebug("anyone there?");
                 foreach (ExtendedLevel patchedLevel in PatchedContent.VanillaExtendedLevels)
                 {
                     if (patchedLevel.SelectableLevel.levelID.Equals(extendedLevel))
