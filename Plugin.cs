@@ -21,7 +21,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.3", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.4", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
@@ -227,7 +227,7 @@ namespace RebalancedMoons
                 {
                     { "Assurance", level => ApplyRebalance(level, reAssuranceExtended) },
                     { "Offense", level => { ApplyRebalance(level, reOffenseExtended); SetScene(level, "ReOffenseScene"); } },
-                    { "March", level => { ApplyRebalance(level, reMarchExtended); SetScene(level, "ReMarchLevel"); } },
+                    { "March", level => { ApplyRebalance(level, reMarchExtended); SetScene(level, "ReMarchScene"); } },
                     { "Adamance", level => { ApplyRebalance(level, reAdamanceExtended); SetScene(level, "ReAdamanceScene"); } },
                     { "Rend", level => ApplyRebalance(level, reRendExtended) },
                     { "Dine", level => { ApplyRebalance(level, reDineExtended); SetScene(level, "ReDineScene"); } },
@@ -333,7 +333,7 @@ namespace RebalancedMoons
                                 var vanillaSceneMapping = new Dictionary<string, string>
                                 {
                                     { "ReOffenseScene", "Level7Offense" },
-                                    { "ReMarchLevel", "Level4March" },
+                                    { "ReMarchScene", "Level4March" },
                                     { "ReAdamanceScene", "Level10Adamance" },
                                     { "ReDineScene", "Level6Dine" },
                                     { "ReTitanScene", "Level8Titan" }
