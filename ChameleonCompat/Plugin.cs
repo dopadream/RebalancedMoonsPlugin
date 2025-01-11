@@ -26,24 +26,20 @@ namespace RebalancedMoons.ChameleonCompat
     [HarmonyPatch]  
     internal class ChameleonCompatPatches
     {
-        [HarmonyPatch(typeof(Chameleon.SceneOverrides), nameof(Chameleon.SceneOverrides.SetUpFancyEntranceDoors))]
+        [HarmonyPatch(typeof(Chameleon.Overrides.EntranceDoorFancifier), nameof(Chameleon.Overrides.EntranceDoorFancifier.Apply))]
         [HarmonyPrefix]
-        static void OnApplyCosmeticInfoPostfix(ref Chameleon.Info.LevelCosmeticInfo levelCosmeticInfo)
+        static void OnApplyCosmeticInfoPostfix()
         {
             string levelName = StartOfRound.Instance.currentLevel.name;
             if (levelName == "DineLevel")
             {
-                Chameleon.Info.LevelCosmeticInfo newInfo =
-
-                levelCosmeticInfo = new()
+                Chameleon.Common.currentLevelCosmeticInfo = new()
                 {
                     fancyDoorPos = new(-156.5477f, -15.0669f, 16.7538f),
                     fancyDoorRot = Quaternion.Euler(270f, 174.2912f, 0f),
                     doorLightColor = Chameleon.Info.DoorLightPalette.BLIZZARD_BACKGROUND,
                     windowMatName = "FakeWindowView3"
                 };
-
-                levelCosmeticInfo = newInfo;
             }
         }
     }
