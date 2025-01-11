@@ -2,6 +2,7 @@
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using DunGen;
+using GameNetcodeStuff;
 using HarmonyLib;
 using LethalLevelLoader;
 using System;
@@ -12,6 +13,8 @@ using System.Reflection;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.HighDefinition;
+using UnityEngine.SceneManagement;
 using static DunGen.Graph.DungeonFlow;
 
 namespace RebalancedMoons
@@ -21,7 +24,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.4", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.5", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
@@ -143,7 +146,7 @@ namespace RebalancedMoons
         }
         internal static void ApplySky()
         {
-            if (ModConfig.configHDRISkies.Value)
+            if (ModConfig.configSnowySkies.Value || ModConfig.configEmbrionSky.Value)
             {
                 foreach (Volume volume in FindObjectsByType<Volume>(FindObjectsSortMode.None))
                 {
@@ -177,6 +180,7 @@ namespace RebalancedMoons
                             profile = "SnowyProfile";
                         }
                     }
+
                     if (embyProfile != null)
                     {
                         if (StartOfRound.Instance?.currentLevel?.PlanetName?.Contains("Embrion") == true &&
@@ -192,10 +196,22 @@ namespace RebalancedMoons
 
                         if (volume.name.Equals("Sky and Fog Global Volume"))
                         {
-                            if (profile.Equals("SnowyProfile"))
+                            if (profile.Equals("SnowyProfile") && ModConfig.configSnowySkies.Value)
+                            {
                                 volume.sharedProfile = snowyProfile;
-                            else if (profile.Equals("EmbyProfile"))
+                            }
+                            else if (profile.Equals("EmbyProfile") && ModConfig.configEmbrionSky.Value)
+                            {
                                 volume.sharedProfile = embyProfile;
+                                if (!ModConfig.configAmbientVariety.Value)
+                                {
+                                    volume.sharedProfile.TryGet(out Fog fog);
+                                    if (fog != null)
+                                    {
+                                        fog.albedo.overrideState = false;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -350,24 +366,29 @@ namespace RebalancedMoons
                 }
             }
 
-            [HarmonyPatch(typeof(DungeonLoader), nameof(DungeonLoader.PatchFireEscapes))]
+/*            [HarmonyPatch(typeof(DungeonLoader), nameof(DungeonLoader.PatchFireEscapes))]
             [HarmonyPostfix]
             static void OnPatchFireEscapesPostfix(ref DungeonGenerator dungeonGenerator)
             {
                 if (StartOfRound.Instance.currentLevel.PlanetName.Contains("Titan") && !ModConfig.configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel.sceneName == "ReTitanScene")
                 {
+                    List<EntranceTeleport> list = (from o in DungeonLoader.GetEntranceTeleports(scene)
+                                                   orderby o.entranceId
+                                                   select o).ToList();
                     foreach (GlobalPropSettings globalPropSettings in dungeonGenerator.DungeonFlow.GlobalProps)
                     {
                         if (globalPropSettings.ID == 1231)
                         {
-                            globalPropSettings.Count = new (2, 2);
+                            globalPropSettings.Count = new(2, 2);
                             break;
                         }
                     }
                 }
-            }
+            }*/
 
-            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.GenerateNewFloor))]
+
+
+            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.SetChallengeFileRandomModifiers))]
             [HarmonyPriority(Priority.First)]
             [HarmonyPrefix]
             static void OnGenerateNewFloorPrefix(RoundManager __instance)
@@ -396,6 +417,43 @@ namespace RebalancedMoons
                 }
             }
 
+
+            // titan creepy lights
+
+            [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.RefreshLightsList))]
+            [HarmonyPostfix]
+            static void RefreshLightsPostFix(ref List<Light> ___allPoweredLights)
+            {
+                if (ModConfig.configAmbientVariety.Value && StartOfRound.Instance.currentLevel.name.Equals("TitanLevel"))
+                {
+                    foreach (Light light in ___allPoweredLights)
+                    {
+                        light.useColorTemperature = true;
+                        light.color = new(0.7F, 0.735F, 0.76F, 1);
+                        light.colorTemperature = 6500;
+                    }
+                }
+            }
+
+
+            [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.KillPlayerClientRpc))]
+            [HarmonyPostfix]
+            static void OnKillPlayerClientRpcPostfix(PlayerControllerB __instance)
+            {
+                if (ModConfig.configAmbientVariety.Value && StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") /*&& (RoundManager.Instance.LevelRandom.Next(0, 2) != 0)*/)
+                {
+                    if (__instance.playersManager.connectedPlayersAmount >= 1 && __instance.playersManager.livingPlayers == 1)
+                    {
+                        RoundManager.Instance.FlickerLights();
+                        foreach (Light light in RoundManager.Instance.allPoweredLights)
+                        {
+                            light.color = new(0.4F, 0.425F, 0.45F, 1);
+                        }
+                    }
+                }
+            }
+
+            // remove rebalanced moon levels from terminal
 
             [HarmonyPatch(typeof(TerminalManager), nameof(TerminalManager.GetExtendedLevelGroups))]
             [HarmonyPostfix]

@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>RebalancedMoons</AssemblyName>
     <Description>Rebalances/reworks some of the vanilla moons.</Description>
-    <Version>1.5.4</Version>
+    <Version>1.5.5</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>

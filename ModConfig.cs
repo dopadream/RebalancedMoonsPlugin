@@ -7,7 +7,7 @@ namespace RebalancedMoons
     {
 
 
-        internal static ConfigEntry<bool> configHDRISkies;
+        internal static ConfigEntry<bool> configSnowySkies, configEmbrionSky, configAmbientVariety;
         internal static ConfigEntry<bool> configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene;
         internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
         internal static ConfigEntry<bool> configMarchDungeons, configDineDungeons, configTitanDungeons;
@@ -16,8 +16,14 @@ namespace RebalancedMoons
         {
             // -client settings-
 
-            configHDRISkies = cfg.Bind("Client", "New HDRI Skies", true,
-                new ConfigDescription("Adds new HDRI sky volumes to Embrion and snowy moons."));
+            configSnowySkies = cfg.Bind("Client", "New Snowy Skies", true,
+                new ConfigDescription("Adds new HDRI sky volumes to snowy moons."));
+
+            configEmbrionSky = cfg.Bind("Client", "New Embrion Skies", true,
+                new ConfigDescription("Adds new sunset HDRI sky volume to Embrion."));
+
+            configAmbientVariety = cfg.Bind("Client", "Ambient Color Variety", true,
+                new ConfigDescription("Adds slightly purple tinted fog to Embrion, and colder interior lighting on Titan."));
 
             // -server settings-
 
