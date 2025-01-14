@@ -21,7 +21,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.6", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.7", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
@@ -424,9 +424,12 @@ namespace RebalancedMoons
                 {
                     foreach (Light light in ___allPoweredLights)
                     {
-                        light.useColorTemperature = true;
-                        light.color = new(0.7F, 0.735F, 0.76F, 1);
-                        light.colorTemperature = 6500;
+                        if (light != null)
+                        {
+                            light.useColorTemperature = true;
+                            light.color = new(0.7F, 0.735F, 0.76F, 1);
+                            light.colorTemperature = 6500;
+                        }
                     }
                 }
             }
@@ -443,7 +446,10 @@ namespace RebalancedMoons
                         RoundManager.Instance.FlickerLights();
                         foreach (Light light in RoundManager.Instance.allPoweredLights)
                         {
-                            light.color = new(0.4F, 0.425F, 0.45F, 1);
+                            if (light != null)
+                            {
+                                light.color = new(0.4F, 0.425F, 0.45F, 1);
+                            }
                         }
                     }
                 }
