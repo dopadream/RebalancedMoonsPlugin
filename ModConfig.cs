@@ -11,6 +11,7 @@ namespace RebalancedMoons
         internal static ConfigEntry<bool> configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene;
         internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
         internal static ConfigEntry<bool> configMarchDungeons, configDineDungeons, configTitanDungeons;
+        internal static ConfigEntry<bool> configWeatherOverrides;
         internal static ConfigEntry<string> configMoonEntries;
         internal static void Init(ConfigFile cfg)
         {
@@ -56,6 +57,9 @@ namespace RebalancedMoons
 
             configTitanDungeons = cfg.Bind("Server", "Titan Interior Overrides", true,
                 new ConfigDescription("REQUIRES RESTART WHEN DISABLING INGAME - Overrides the interior selections on Titan to make Mineshaft significantly more common."));
+
+            configWeatherOverrides = cfg.Bind("Server", "Weather Overrides", true,
+                new ConfigDescription("Enables weather overrides on rebalanced moons (Replaces Rainy w/ Foggy on Dine)"));
 
 
             // --misc settings--

@@ -36,7 +36,7 @@ namespace RebalancedMoons.ChameleonCompat
                 Chameleon.Common.currentLevelCosmeticInfo = new()
                 {
                     fancyDoorPos = new(-156.5477f, -15.0669f, 16.7538f),
-                    fancyDoorRot = Quaternion.Euler(270f, 174.2912f, 0f),
+                    fancyDoorRot = Quaternion.Euler(270f, -5.7088f, 0f),
                     doorLightColor = Chameleon.Info.DoorLightPalette.BLIZZARD_BACKGROUND,
                     windowMatName = "FakeWindowView3"
                 };

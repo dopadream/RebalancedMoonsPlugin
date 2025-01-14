@@ -42,6 +42,32 @@ namespace RebalancedMoons
             }
         }
 
+        [ServerRpc(RequireOwnership = false)]
+        public void WeatherServerRpc()
+        {
+            if (ModConfig.configWeatherOverrides.Value)
+            {
+                WeatherClientRpc();
+            }
+        }
+
+
+        [ClientRpc]
+        public void WeatherClientRpc()
+        {
+            foreach (ExtendedLevel level in PatchedContent.VanillaExtendedLevels)
+            {
+                switch (level.NumberlessPlanetName)
+                {
+                    case "Dine": 
+                        {
+                            level.SelectableLevel.randomWeathers = Plugin.reDineExtended.SelectableLevel.randomWeathers;
+                            break;
+                        }
+                }
+            }
+        }
+
         [ClientRpc]
         public void InteriorClientRpc(string name)
         {

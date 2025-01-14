@@ -1,7 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
-using DunGen;
 using GameNetcodeStuff;
 using HarmonyLib;
 using LethalLevelLoader;
@@ -14,8 +13,6 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
-using UnityEngine.SceneManagement;
-using static DunGen.Graph.DungeonFlow;
 
 namespace RebalancedMoons
 {
@@ -24,7 +21,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.5", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.6", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
@@ -120,9 +117,6 @@ namespace RebalancedMoons
             input.SelectableLevel.daytimeEnemiesProbabilityRange = output.SelectableLevel.daytimeEnemiesProbabilityRange;
             input.SelectableLevel.daytimeEnemySpawnChanceThroughDay = output.SelectableLevel.daytimeEnemySpawnChanceThroughDay;
 
-            input.SelectableLevel.daytimeEnemiesProbabilityRange = output.SelectableLevel.daytimeEnemiesProbabilityRange;
-            input.SelectableLevel.daytimeEnemySpawnChanceThroughDay = output.SelectableLevel.daytimeEnemySpawnChanceThroughDay;
-
             input.SelectableLevel.outsideEnemySpawnChanceThroughDay = output.SelectableLevel.outsideEnemySpawnChanceThroughDay;
 
             input.SelectableLevel.minScrap = output.SelectableLevel.minScrap;
@@ -133,6 +127,8 @@ namespace RebalancedMoons
 
             input.SelectableLevel.spawnableScrap.Clear();
             input.SelectableLevel.spawnableScrap.AddRange(output.SelectableLevel.spawnableScrap);
+
+            ModNetworkHandler.Instance.WeatherServerRpc();
 
             input.SelectableLevel.spawnableMapObjects = output.SelectableLevel.spawnableMapObjects;
             input.SelectableLevel.spawnableOutsideObjects = output.SelectableLevel.spawnableOutsideObjects;
@@ -440,7 +436,7 @@ namespace RebalancedMoons
             [HarmonyPostfix]
             static void OnKillPlayerClientRpcPostfix(PlayerControllerB __instance)
             {
-                if (ModConfig.configAmbientVariety.Value && StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") /*&& (RoundManager.Instance.LevelRandom.Next(0, 2) != 0)*/)
+                if (ModConfig.configAmbientVariety.Value && StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && (RoundManager.Instance.LevelRandom.Next(0, 2) != 0))
                 {
                     if (__instance.playersManager.connectedPlayersAmount >= 1 && __instance.playersManager.livingPlayers == 1)
                     {
