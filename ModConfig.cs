@@ -8,7 +8,7 @@ namespace RebalancedMoons
 
 
         internal static ConfigEntry<bool> configSnowySkies, configEmbrionSky, configAmbientVariety;
-        internal static ConfigEntry<bool> configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene;
+        internal static ConfigEntry<bool> configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene, configEmbrionScene;
         internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
         internal static ConfigEntry<bool> configMarchDungeons, configDineDungeons, configTitanDungeons;
         internal static ConfigEntry<bool> configWeatherOverrides;
@@ -35,19 +35,22 @@ namespace RebalancedMoons
                 new ConfigDescription("Adds a 3rd fire exit to Titan under the first one. Off by default as it's a bit overpowered."));
 
             configOffenseScene = cfg.Bind("Server", "Offense Scene Overrides", true,
-                new ConfigDescription("Replaces Offense with a new scene using LLL."));
+                new ConfigDescription("Replaces Offense's scene with a new one using LLL."));
 
             configAdamanceScene = cfg.Bind("Server", "Adamance Scene Overrides", true,
-                new ConfigDescription("Replaces Adamance with a new scene using LLL."));
+                new ConfigDescription("Replaces Adamance's scene with a new one using LLL."));
 
             configMarchScene = cfg.Bind("Server", "March Scene Overrides", true,
-                new ConfigDescription("Replaces March with a new scene using LLL."));
+                new ConfigDescription("Replaces March's scene with a new one using LLL."));
 
             configDineScene = cfg.Bind("Server", "Dine Scene Overrides", true,
-                new ConfigDescription("Replaces Dine with a new scene using LLL."));
+                new ConfigDescription("Replaces Dine's scene with a new one using LLL."));
 
             configTitanScene = cfg.Bind("Server", "Titan Scene Overrides", true,
-                new ConfigDescription("Replaces Titan with a new scene using LLL."));
+                new ConfigDescription("Replaces Titan's scene with a new one using LLL."));
+
+            configEmbrionScene = cfg.Bind("Server", "Embrion Scene Overrides", true,
+                new ConfigDescription("Replaces Embrion's scene with a new one using LLL."));
 
             configMarchDungeons = cfg.Bind("Server", "March Interior Overrides", true,
                 new ConfigDescription("REQUIRES RESTART WHEN DISABLING INGAME - Overrides the interior selections on March to include all vanilla interiors."));

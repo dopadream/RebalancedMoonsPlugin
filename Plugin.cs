@@ -21,7 +21,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.7", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.9", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
         internal static ExtendedMod rebalancedMoonsMod;
@@ -245,7 +245,7 @@ namespace RebalancedMoons
                     { "Dine", level => { ApplyRebalance(level, reDineExtended); SetScene(level, "ReDineScene"); } },
                     { "Titan", level => { ApplyRebalance(level, reTitanExtended); SetScene(level, "ReTitanScene"); } },
                     { "Artifice", level => level.SelectableLevel.riskLevel = "S+" },
-                    { "Embrion", level => ApplyRebalance(level, reEmbrionExtended) }
+                    { "Embrion", level => { ApplyRebalance(level, reEmbrionExtended); SetScene(level, "ReEmbrionScene"); } }
                 };
 
                 if (planetActions.TryGetValue(extendedLevel.NumberlessPlanetName, out var action))
@@ -265,7 +265,8 @@ namespace RebalancedMoons
                     { "March", ModConfig.configMarchScene.Value },
                     { "Adamance", ModConfig.configAdamanceScene.Value },
                     { "Dine", ModConfig.configDineScene.Value },
-                    { "Titan", ModConfig.configTitanScene.Value }
+                    { "Titan", ModConfig.configTitanScene.Value },
+                    { "Embrion", ModConfig.configEmbrionScene.Value }
                 };
 
                 if (planetSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out bool configValue))
@@ -381,8 +382,6 @@ namespace RebalancedMoons
                     }
                 }
             }*/
-
-
 
             [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.SetChallengeFileRandomModifiers))]
             [HarmonyPriority(Priority.First)]
