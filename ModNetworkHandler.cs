@@ -121,50 +121,6 @@ namespace RebalancedMoons
                     planetNames.Add(new StringWithRarity(planetName, rarity));
                 }
             }
-
-            /*            foreach (ExtendedLevel level in PatchedContent.ExtendedLevels)
-                        {
-                            switch (name)
-                            {
-                                case "March":
-                                    if (level.NumberlessPlanetName == name || level.SelectableLevel.sceneName == "ReMarchLevel")
-                                    {
-                                        for (int i = 0; i < level.SelectableLevel.dungeonFlowTypes.Length; i++)
-                                        {
-                                            if (level.SelectableLevel.dungeonFlowTypes[i].id == 3)
-                                                level.SelectableLevel.dungeonFlowTypes[i].id = 0;
-
-                                        }
-                                        level.SelectableLevel.dungeonFlowTypes = level.SelectableLevel.dungeonFlowTypes.Union(Plugin.reMarchExtended.SelectableLevel.dungeonFlowTypes).ToArray();
-                                        level.SelectableLevel.factorySizeMultiplier = 1.8f;
-                                    }
-                                    break;
-                                case "Dine":
-                                    if (level.NumberlessPlanetName == name || level.SelectableLevel.sceneName == "ReDineScene")
-                                    {
-                                        for (int i = 0; i < level.SelectableLevel.dungeonFlowTypes.Length; i++)
-                                        {
-                                            if (level.SelectableLevel.dungeonFlowTypes[i].id == 4)
-                                                level.SelectableLevel.dungeonFlowTypes[i].rarity = 50;
-
-                                        }
-                                    }
-                                    break;
-                                case "Titan":
-                                    if (level.NumberlessPlanetName == name || level.SelectableLevel.sceneName == "ReTitanScene")
-                                    {
-                                        for (int i = 0; i < level.SelectableLevel.dungeonFlowTypes.Length; i++)
-                                        {
-                                            if (level.SelectableLevel.dungeonFlowTypes[i].id == 0)
-                                                level.SelectableLevel.dungeonFlowTypes[i].rarity = 115;
-                                            if (level.SelectableLevel.dungeonFlowTypes[i].id == 4)
-                                                level.SelectableLevel.dungeonFlowTypes[i].rarity = 300;
-
-                                        }
-                                        level.SelectableLevel.factorySizeMultiplier = 2;
-                                    }
-                                    break;
-                            }*/
         }
 
 
