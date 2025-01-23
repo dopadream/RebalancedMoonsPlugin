@@ -21,9 +21,9 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.5.9", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.6.0", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
-        internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended;
+        internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended, reArtificeExtended;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static VolumeProfile snowyProfile, embyProfile;
         public AssetBundle NetworkBundle;
@@ -88,13 +88,14 @@ namespace RebalancedMoons
             if (extendedMod == null) return;
             rebalancedMoonsMod = extendedMod;
             reAdamanceExtended = rebalancedMoonsMod.ExtendedLevels[0];
-            reAssuranceExtended = rebalancedMoonsMod.ExtendedLevels[1];
-            reDineExtended = rebalancedMoonsMod.ExtendedLevels[2];
-            reEmbrionExtended = rebalancedMoonsMod.ExtendedLevels[3];
-            reMarchExtended = rebalancedMoonsMod.ExtendedLevels[4];
-            reOffenseExtended = rebalancedMoonsMod.ExtendedLevels[5];
-            reRendExtended = rebalancedMoonsMod.ExtendedLevels[6];
-            reTitanExtended = rebalancedMoonsMod.ExtendedLevels[7];
+            reArtificeExtended = rebalancedMoonsMod.ExtendedLevels[1];
+            reAssuranceExtended = rebalancedMoonsMod.ExtendedLevels[2];
+            reDineExtended = rebalancedMoonsMod.ExtendedLevels[3];
+            reEmbrionExtended = rebalancedMoonsMod.ExtendedLevels[4];
+            reMarchExtended = rebalancedMoonsMod.ExtendedLevels[5];
+            reOffenseExtended = rebalancedMoonsMod.ExtendedLevels[6];
+            reRendExtended = rebalancedMoonsMod.ExtendedLevels[7];
+            reTitanExtended = rebalancedMoonsMod.ExtendedLevels[8];
         }
 
 
@@ -140,81 +141,6 @@ namespace RebalancedMoons
 
             Logger.LogDebug("Rebalances applied for " + input + "!");
         }
-        internal static void ApplySky()
-        {
-            if (ModConfig.configSnowySkies.Value || ModConfig.configEmbrionSky.Value)
-            {
-                foreach (Volume volume in FindObjectsByType<Volume>(FindObjectsSortMode.None))
-                {
-                    if (snowyProfile == null || embyProfile == null)
-                    {
-                        try
-                        {
-                            AssetBundle hdriSkies = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "hdri_skies"));
-                            snowyProfile = hdriSkies.LoadAsset<VolumeProfile>("ReSnowyFog");
-                            embyProfile = hdriSkies.LoadAsset<VolumeProfile>("EmbrionSky");
-                        }
-                        catch
-                        {
-                            Plugin.Logger.LogError("Encountered some error loading assets from bundle \"hdri_skies\". Did you install the plugin correctly?");
-                            return;
-                        }
-                    }
-
-                    if (volume == null || volume.sharedProfile == null)
-                    {
-                        continue;
-                    }
-
-                    string profile = null;
-
-                    if (snowyProfile != null)
-                    {
-                        if (volume.sharedProfile.name.Contains("SnowyFog") &&
-                            StartOfRound.Instance?.currentLevel?.PlanetName?.Contains("Artifice") == false)
-                        {
-                            profile = "SnowyProfile";
-                        }
-                    }
-
-                    if (embyProfile != null)
-                    {
-                        if (StartOfRound.Instance?.currentLevel?.PlanetName?.Contains("Embrion") == true &&
-                            volume.sharedProfile.name.Contains("Sky and Fog Settings Profile"))
-                        {
-                            profile = "EmbyProfile";
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(profile))
-                    {
-                        Plugin.Logger.LogInfo($"Applying profile '{profile}' to Volume {volume.name}.");
-
-                        if (volume.name.Equals("Sky and Fog Global Volume"))
-                        {
-                            if (profile.Equals("SnowyProfile") && ModConfig.configSnowySkies.Value)
-                            {
-                                volume.sharedProfile = snowyProfile;
-                            }
-                            else if (profile.Equals("EmbyProfile") && ModConfig.configEmbrionSky.Value)
-                            {
-                                volume.sharedProfile = embyProfile;
-                                if (!ModConfig.configAmbientVariety.Value)
-                                {
-                                    volume.sharedProfile.TryGet(out Fog fog);
-                                    if (fog != null)
-                                    {
-                                        fog.albedo.overrideState = false;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-
 
         internal class RebalancedMoonsPatches
         {
@@ -237,14 +163,15 @@ namespace RebalancedMoons
             {
                 var planetActions = new Dictionary<string, Action<ExtendedLevel>>
                 {
-                    { "Assurance", level => ApplyRebalance(level, reAssuranceExtended) },
+                    { "Experimentation", level => { SetScene(level, "ReExperimentationScene"); } },
+                    { "Assurance", level => { ApplyRebalance(level, reAssuranceExtended); SetScene(level, "ReAssuranceScene"); } },
                     { "Offense", level => { ApplyRebalance(level, reOffenseExtended); SetScene(level, "ReOffenseScene"); } },
                     { "March", level => { ApplyRebalance(level, reMarchExtended); SetScene(level, "ReMarchScene"); } },
                     { "Adamance", level => { ApplyRebalance(level, reAdamanceExtended); SetScene(level, "ReAdamanceScene"); } },
-                    { "Rend", level => ApplyRebalance(level, reRendExtended) },
+                    { "Rend", level => { ApplyRebalance(level, reRendExtended); SetScene(level, "ReRendScene"); } },
                     { "Dine", level => { ApplyRebalance(level, reDineExtended); SetScene(level, "ReDineScene"); } },
                     { "Titan", level => { ApplyRebalance(level, reTitanExtended); SetScene(level, "ReTitanScene"); } },
-                    { "Artifice", level => level.SelectableLevel.riskLevel = "S+" },
+                    { "Artifice", level => { ApplyRebalance(level, reArtificeExtended); SetScene(level, "reArtificeScene"); } },
                     { "Embrion", level => { ApplyRebalance(level, reEmbrionExtended); SetScene(level, "ReEmbrionScene"); } }
                 };
 
@@ -261,6 +188,8 @@ namespace RebalancedMoons
 
                 var planetSceneMapping = new Dictionary<string, bool>
                 {
+                    { "Experimentation", ModConfig.configExperimentationScene.Value },
+                    { "Assurance", ModConfig.configAssuranceScene.Value },
                     { "Offense", ModConfig.configOffenseScene.Value },
                     { "March", ModConfig.configMarchScene.Value },
                     { "Adamance", ModConfig.configAdamanceScene.Value },
@@ -363,26 +292,6 @@ namespace RebalancedMoons
                 }
             }
 
-/*            [HarmonyPatch(typeof(DungeonLoader), nameof(DungeonLoader.PatchFireEscapes))]
-            [HarmonyPostfix]
-            static void OnPatchFireEscapesPostfix(ref DungeonGenerator dungeonGenerator)
-            {
-                if (StartOfRound.Instance.currentLevel.PlanetName.Contains("Titan") && !ModConfig.configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel.sceneName == "ReTitanScene")
-                {
-                    List<EntranceTeleport> list = (from o in DungeonLoader.GetEntranceTeleports(scene)
-                                                   orderby o.entranceId
-                                                   select o).ToList();
-                    foreach (GlobalPropSettings globalPropSettings in dungeonGenerator.DungeonFlow.GlobalProps)
-                    {
-                        if (globalPropSettings.ID == 1231)
-                        {
-                            globalPropSettings.Count = new(2, 2);
-                            break;
-                        }
-                    }
-                }
-            }*/
-
             [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.SetChallengeFileRandomModifiers))]
             [HarmonyPriority(Priority.First)]
             [HarmonyPrefix]
@@ -419,7 +328,7 @@ namespace RebalancedMoons
             [HarmonyPostfix]
             static void RefreshLightsPostFix(ref List<Light> ___allPoweredLights)
             {
-                if (ModConfig.configAmbientVariety.Value && StartOfRound.Instance.currentLevel.name.Equals("TitanLevel"))
+                if (ModConfig.configTitanLighting.Value && StartOfRound.Instance.currentLevel.name.Equals("TitanLevel"))
                 {
                     foreach (Light light in ___allPoweredLights)
                     {
@@ -438,7 +347,7 @@ namespace RebalancedMoons
             [HarmonyPostfix]
             static void OnKillPlayerClientRpcPostfix(PlayerControllerB __instance)
             {
-                if (ModConfig.configAmbientVariety.Value && StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && (RoundManager.Instance.LevelRandom.Next(0, 2) != 0))
+                if (ModConfig.configTitanLighting.Value && StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && (RoundManager.Instance.LevelRandom.Next(0, 2) != 0))
                 {
                     if (__instance.playersManager.connectedPlayersAmount >= 1 && __instance.playersManager.livingPlayers == 1)
                     {

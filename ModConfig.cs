@@ -7,8 +7,8 @@ namespace RebalancedMoons
     {
 
 
-        internal static ConfigEntry<bool> configSnowySkies, configEmbrionSky, configAmbientVariety;
-        internal static ConfigEntry<bool> configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene, configEmbrionScene;
+        internal static ConfigEntry<bool> configTitanLighting;
+        internal static ConfigEntry<bool> configExperimentationScene, configAssuranceScene, configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene, configEmbrionScene;
         internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
         internal static ConfigEntry<bool> configMarchDungeons, configDineDungeons, configTitanDungeons;
         internal static ConfigEntry<bool> configWeatherOverrides;
@@ -17,14 +17,8 @@ namespace RebalancedMoons
         {
             // -client settings-
 
-            configSnowySkies = cfg.Bind("Client", "New Snowy Skies", true,
-                new ConfigDescription("Adds new HDRI sky volumes to snowy moons."));
-
-            configEmbrionSky = cfg.Bind("Client", "New Embrion Skies", true,
-                new ConfigDescription("Adds new sunset HDRI sky volume to Embrion."));
-
-            configAmbientVariety = cfg.Bind("Client", "Ambient Color Variety", true,
-                new ConfigDescription("Adds slightly purple tinted fog to Embrion, and colder interior lighting on Titan."));
+            configTitanLighting = cfg.Bind("Client", "Titan Lighting", true,
+                new ConfigDescription("Adds colder interior lighting to Titan."));
 
             // -server settings-
 
@@ -33,6 +27,12 @@ namespace RebalancedMoons
 
             configTitanThirdFireExit = cfg.Bind("Server", "Titan Third Fire Exit", false,
                 new ConfigDescription("Adds a 3rd fire exit to Titan under the first one. Off by default as it's a bit overpowered."));
+
+            configExperimentationScene = cfg.Bind("Server", "Experimentation Scene Overrides", true,
+                new ConfigDescription("Replaces Experimentation's scene with a new one using LLL."));
+
+            configAssuranceScene = cfg.Bind("Server", "Assurance Scene Overrides", true,
+                new ConfigDescription("Replaces Assurance's scene with a new one using LLL."));
 
             configOffenseScene = cfg.Bind("Server", "Offense Scene Overrides", true,
                 new ConfigDescription("Replaces Offense's scene with a new one using LLL."));

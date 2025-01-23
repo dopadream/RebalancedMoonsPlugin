@@ -51,6 +51,32 @@ namespace RebalancedMoons
             }
         }
 
+        [ServerRpc(RequireOwnership = false)]
+        public void MoonPriceServerRpc()
+        {
+            if (ModConfig.configMoonPriceOverrides.Value)
+            {
+                MoonPriceClientRpc();
+            }
+        }
+
+
+        [ClientRpc]
+        public void MoonPriceClientRpc()
+        {
+            foreach (ExtendedLevel level in PatchedContent.VanillaExtendedLevels)
+            {
+                switch (level.NumberlessPlanetName)
+                {
+                    case "Dine":
+                        {
+                            level.RoutePrice = Plugin.reDineExtended.RoutePrice;
+                            break;
+                        }
+                }
+            }
+        }
+
 
         [ClientRpc]
         public void WeatherClientRpc()
@@ -62,6 +88,12 @@ namespace RebalancedMoons
                     case "Dine": 
                         {
                             level.SelectableLevel.randomWeathers = Plugin.reDineExtended.SelectableLevel.randomWeathers;
+                            break;
+                        }
+                    case "March":
+                        {
+                            level.SelectableLevel.overrideWeather = true;
+                            level.SelectableLevel.overrideWeatherType = Plugin.reMarchExtended.SelectableLevel.overrideWeatherType;
                             break;
                         }
                 }
