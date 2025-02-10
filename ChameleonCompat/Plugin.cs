@@ -10,7 +10,7 @@ namespace RebalancedMoons.ChameleonCompat
 
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons.chameleoncompat", PLUGIN_NAME = "RebalancedMoonsChameleonCompat", PLUGIN_VERSION = "0.0.1", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
+        const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons.chameleoncompat", PLUGIN_NAME = "RebalancedMoonsChameleonCompat", PLUGIN_VERSION = "0.0.2", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
         internal static new ManualLogSource Logger;
 
         void Awake()
@@ -33,13 +33,8 @@ namespace RebalancedMoons.ChameleonCompat
             string levelName = StartOfRound.Instance.currentLevel.name;
             if (levelName == "DineLevel")
             {
-                Chameleon.Common.currentLevelCosmeticInfo = new()
-                {
-                    fancyDoorPos = new(-156.5477f, -15.0669f, 16.7538f),
-                    fancyDoorRot = Quaternion.Euler(270f, -5.7088f, 0f),
-                    doorLightColor = Chameleon.Info.DoorLightPalette.BLIZZARD_BACKGROUND,
-                    windowMatName = "FakeWindowView3"
-                };
+                Chameleon.Common.currentLevelCosmeticInfo.fancyDoorPos = new(-156.5477f, -15.0669f, 16.7538f);
+                Chameleon.Common.currentLevelCosmeticInfo.fancyDoorRot = Quaternion.Euler(270f, -5.7088f, 0f);
             }
         }
     }

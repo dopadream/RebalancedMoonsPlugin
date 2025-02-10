@@ -84,14 +84,6 @@ namespace RebalancedMoons
 
             configMoonPriceOverrides = cfg.Bind("Server", "Price Overrides", true,
                 new ConfigDescription("Enables price overrides on rebalanced moons"));
-
-            // --misc settings--
-
-            configMoonEntries = cfg.Bind("Misc", "Rebalanced Moon Names", "Assurаncе, Offеnsе, Mаrch, Adаmance, Embrіon, Rеnd, Dіne, Tіtan",
-                new ConfigDescription("THIS SETTING DOES NOTHING AND SERVES AS A LIST FOR REFERENCE! You can copy the rebalanced moon names from here for all your config needs. They look the same, but they use cyrillic letters."));
-
-            // -----------------
         }
-
     }
 }
