@@ -14,10 +14,5 @@ namespace RebalancedMoons
                     returnList.Add(component);
             return (returnList);
         }
-
-        public static void initSceneOverrides()
-        {
-            Plugin.ApplySky();
-        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using LethalLevelLoader;
+﻿using HarmonyLib;
+using LethalLevelLoader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,6 +61,26 @@ namespace RebalancedMoons
             }
         }
 
+        [ServerRpc(RequireOwnership = false)]
+        public void MoonPropertiesServerRpc()
+        {
+            if (ModConfig.configEmbrionBoulders.Value)
+            {
+                MoonPropertiesClientRpc("EmbrionBoulders");
+            }
+
+            if (ModConfig.configEmbrionGambling.Value)
+            {
+                MoonPropertiesClientRpc("EmbrionGambling");
+            }
+
+            if (ModConfig.configTitanGold.Value)
+            {
+                MoonPropertiesClientRpc("TitanGold");
+            }
+
+        }
+
 
         [ClientRpc]
         public void MoonPriceClientRpc()
@@ -70,7 +91,7 @@ namespace RebalancedMoons
                 {
                     case "Dine":
                         {
-                            level.RoutePrice = Plugin.reDineExtended.RoutePrice;
+                            level.RoutePrice = 650;
                             break;
                         }
                 }
@@ -85,15 +106,17 @@ namespace RebalancedMoons
             {
                 switch (level.NumberlessPlanetName)
                 {
-                    case "Dine": 
+                    case "Dine":
                         {
-                            level.SelectableLevel.randomWeathers = Plugin.reDineExtended.SelectableLevel.randomWeathers;
+                            level.SelectableLevel.randomWeathers[2].weatherType = LevelWeatherType.Foggy;
+                            level.SelectableLevel.randomWeathers[2].weatherVariable = 4;
+                            level.SelectableLevel.randomWeathers[2].weatherVariable2 = 12;
                             break;
                         }
                     case "March":
                         {
                             level.SelectableLevel.overrideWeather = true;
-                            level.SelectableLevel.overrideWeatherType = Plugin.reMarchExtended.SelectableLevel.overrideWeatherType;
+                            level.SelectableLevel.overrideWeatherType = LevelWeatherType.Rainy;
                             break;
                         }
                 }
@@ -101,81 +124,206 @@ namespace RebalancedMoons
         }
 
         [ClientRpc]
-        public void InteriorClientRpc(string name)
+        public void MoonPropertiesClientRpc(string configProperty)
         {
-            if (Plugin.rebalancedMoonsMod == null)
-                return;
 
-            foreach (ExtendedDungeonFlow extendedFlow in PatchedContent.ExtendedDungeonFlows)
+
+            foreach (ExtendedLevel level in PatchedContent.VanillaExtendedLevels)
             {
-                var planetNames = extendedFlow.LevelMatchingProperties.planetNames;
-
-                switch (extendedFlow.DungeonFlow.name)
+                if (level.NumberlessPlanetName == "Embrion")
                 {
-                    case "Level1Flow3Exits":
-                        planetNames.RemoveAll(p => p.Name.Equals("March") && name.Equals("March"));
-                        break;
-
-                    case "Level1Flow":
-                        UpdateMoonInList(planetNames, "Titan", 140, name);
-                        AddMoonIfNotInList(planetNames, "March", 300, name);
-                        break;
-
-                    case "Level2Flow":
-                        UpdateMoonInList(planetNames, "Titan", 40, name);
-                        AddMoonIfNotInList(planetNames, "March", 5, name);
-                        break;
-
-                    case "Level3Flow":
-                        UpdateMoonInList(planetNames, "Dine", 50, name);
-                        UpdateMoonInList(planetNames, "Titan", 300, name);
-                        AddMoonIfNotInList(planetNames, "March", 190, name);
-                        break;
-                }
-            }
-
-
-            static void UpdateMoonInList(List<StringWithRarity> planetNames, string planetName, int newRarity, string configEvent)
-            {
-                foreach (var planet in planetNames)
-                {
-                    if (planet.Name.Equals(planetName) && planet.Name.Equals(configEvent))
+                    switch (configProperty)
                     {
-                        planet.Rarity = newRarity;
+
+                        case ("EmbrionBoulders"):
+                            var curveData = LoadCurve(ref Plugin.embyBoulderCurve, "EmbrionRockCurve");
+                            if (curveData == null || curveData.curve == null)
+                            {
+                                Debug.LogError("Failed to load EmbrionRockCurve!");
+                                return;
+                            }
+                            var embyRockCurve = curveData.curve;
+
+                            string[] boulderNames = { "LargeRock1Embrion", "LargeRock2Embrion", "LargeRock3Embrion", "LargeRock4Embrion" };
+                            var boulders = new List<SpawnableOutsideObjectWithRarity>();
+
+                            for (int i = 0; i < boulderNames.Length; i++)
+                            {
+                                var spawnableObj = LoadOutsideObject(ref Plugin.embrionBoulder1, boulderNames[i]);
+                                if (spawnableObj == null)
+                                {
+                                    Debug.LogError($"Failed to load object: {boulderNames[i]}");
+                                    continue;
+                                }
+
+                                var boulder = new SpawnableOutsideObjectWithRarity
+                                {
+                                    spawnableObject = spawnableObj,
+                                    randomAmount = embyRockCurve
+                                };
+                                boulders.Add(boulder);
+                            }
+
+                            level.SelectableLevel.spawnableOutsideObjects = boulders.ToArray();
+                            break;
+                        case ("EmbrionGambling"):
+                            level.SelectableLevel.spawnableScrap.Clear();
+                            foreach (var item in StartOfRound.Instance.allItemsList.itemsList)
+                            {
+                                if (!item.twoHanded && item.isScrap)
+                                {
+
+                                    if (item.isDefensiveWeapon && item.itemName != "Stop sign" && item.itemName != "Yield sign")
+                                    {
+                                        continue;
+                                    }
+
+                                    SpawnableItemWithRarity spawnableItem = new();
+                                    spawnableItem.spawnableItem = item;
+                                    spawnableItem.rarity = 300;
+                                    level.SelectableLevel.spawnableScrap.Add(spawnableItem);
+                                }
+                            }
+                            break;
+                    }
+                }
+
+
+                if (configProperty == "TitanGold" && level.NumberlessPlanetName == "Titan")
+                {
+                    foreach (SpawnableItemWithRarity item in level.SelectableLevel.spawnableScrap)
+                    {
+                        if (item.spawnableItem.itemName == "Gold bar")
+                        {
+                            return;
+                        }
+                    }
+
+                    foreach (var item in StartOfRound.Instance.allItemsList.itemsList)
+                    {
+                        if (item.itemName == "Gold bar")
+                        {
+                            SpawnableItemWithRarity goldBar = new();
+                            goldBar.spawnableItem = item;
+                            goldBar.rarity = 15;
+                            level.SelectableLevel.spawnableScrap.Add(goldBar);
+                            break;
+                        }
                     }
                 }
             }
+        }
 
-            static void AddMoonIfNotInList(List<StringWithRarity> planetNames, string planetName, int rarity, string configEvent)
+    public SpawnableOutsideObject LoadOutsideObject(ref SpawnableOutsideObject mapObject, string assetName)
+    {
+        if (mapObject == null)
+        {
+            try
             {
-                if (!planetNames.Any(p => p.Name.Equals(planetName) && p.Name.Equals(configEvent)))
+                mapObject = Plugin.Instance.EmbrionBundle.LoadAsset<SpawnableOutsideObject>(assetName);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Logger.LogError($"Failed to load asset '{assetName}' from bundle 'embrionboulders': {ex.Message}");
+            }
+        }
+
+        return mapObject;
+    }
+
+    public BundledCurve LoadCurve(ref BundledCurve curveObject, string assetName)
+    {
+        if (curveObject == null)
+        {
+            try
+            {
+                curveObject = Plugin.Instance.EmbrionBundle.LoadAsset<BundledCurve>(assetName);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Logger.LogError($"Failed to load asset '{assetName}' from bundle 'embrionboulders': {ex.Message}");
+            }
+        }
+
+        return curveObject;
+    }
+
+    [ClientRpc]
+    public void InteriorClientRpc(string name)
+    {
+        if (Plugin.rebalancedMoonsMod == null)
+            return;
+
+        foreach (ExtendedDungeonFlow extendedFlow in PatchedContent.ExtendedDungeonFlows)
+        {
+            var planetNames = extendedFlow.LevelMatchingProperties.planetNames;
+
+            switch (extendedFlow.DungeonFlow.name)
+            {
+                case "Level1Flow3Exits":
+                    planetNames.RemoveAll(p => p.Name.Equals("March") && name.Equals("March"));
+                    break;
+
+                case "Level1Flow":
+                    UpdateMoonInList(planetNames, "Titan", 140, name);
+                    AddMoonIfNotInList(planetNames, "March", 300, name);
+                    break;
+
+                case "Level2Flow":
+                    UpdateMoonInList(planetNames, "Titan", 40, name);
+                    AddMoonIfNotInList(planetNames, "March", 5, name);
+                    break;
+
+                case "Level3Flow":
+                    UpdateMoonInList(planetNames, "Dine", 50, name);
+                    UpdateMoonInList(planetNames, "Titan", 300, name);
+                    AddMoonIfNotInList(planetNames, "March", 190, name);
+                    break;
+            }
+        }
+
+
+        static void UpdateMoonInList(List<StringWithRarity> planetNames, string planetName, int newRarity, string configEvent)
+        {
+            foreach (var planet in planetNames)
+            {
+                if (planet.Name.Equals(planetName) && planet.Name.Equals(configEvent))
                 {
-                    planetNames.Add(new StringWithRarity(planetName, rarity));
+                    planet.Rarity = newRarity;
                 }
             }
         }
 
-
-
-        [ClientRpc]
-        public void DeactivateObjectClientRpc(string name)
+        static void AddMoonIfNotInList(List<StringWithRarity> planetNames, string planetName, int rarity, string configEvent)
         {
-            var gameObject = GameObject.Find(name);
-
-            if (gameObject != null && gameObject.activeSelf)
+            if (!planetNames.Any(p => p.Name.Equals(planetName) && p.Name.Equals(configEvent)))
             {
-                gameObject.SetActive(false);
+                planetNames.Add(new StringWithRarity(planetName, rarity));
             }
         }
-
-
-        [ClientRpc]
-        public void LevelClientRpc(int extendedLevel, string eventName, string sceneName)
-        {
-            SendLevelEvent?.Invoke(extendedLevel, eventName, sceneName);
-        }
-
-        public static event Action<int, String, String> SendLevelEvent;
-
     }
+
+
+
+    [ClientRpc]
+    public void DeactivateObjectClientRpc(string name)
+    {
+        var gameObject = GameObject.Find(name);
+
+        if (gameObject != null && gameObject.activeSelf)
+        {
+            gameObject.SetActive(false);
+        }
+    }
+
+
+    [ClientRpc]
+    public void LevelClientRpc(int extendedLevel, string eventName, string sceneName)
+    {
+        SendLevelEvent?.Invoke(extendedLevel, eventName, sceneName);
+    }
+
+    public static event Action<int, String, String> SendLevelEvent;
+
+}
 }

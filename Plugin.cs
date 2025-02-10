@@ -7,12 +7,9 @@ using LethalLevelLoader;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.HighDefinition;
 
 namespace RebalancedMoons
 {
@@ -23,10 +20,10 @@ namespace RebalancedMoons
         public static Plugin Instance { get; set; }
         public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.6.0", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
-        internal static ExtendedLevel reRendExtended, reDineExtended, reMarchExtended, reOffenseExtended, reAssuranceExtended, reEmbrionExtended, reTitanExtended, reAdamanceExtended, reArtificeExtended;
         internal static ExtendedMod rebalancedMoonsMod;
-        internal static VolumeProfile snowyProfile, embyProfile;
-        public AssetBundle NetworkBundle;
+        internal static SpawnableOutsideObject embrionBoulder1, embrionBoulder2, embrionBoulder3, embrionBoulder4;
+        internal static BundledCurve embyBoulderCurve;
+        public AssetBundle NetworkBundle, EmbrionBundle;
 
         public Plugin()
         {
@@ -41,8 +38,12 @@ namespace RebalancedMoons
             ModConfig.Init(Config);
 
             var dllFolderPath = Path.GetDirectoryName(Info.Location);
-            var assetBundleFilePath = Path.Combine(dllFolderPath, "networkprefab");
-            NetworkBundle = AssetBundle.LoadFromFile(assetBundleFilePath);
+
+            var networkBundleFilePath = Path.Combine(dllFolderPath, "networkprefab");
+            NetworkBundle = AssetBundle.LoadFromFile(networkBundleFilePath);
+
+            var embrionBundleFilePath = Path.Combine(dllFolderPath, "embrionboulders");
+            EmbrionBundle = AssetBundle.LoadFromFile(embrionBundleFilePath);
 
             NetcodePatcher();
 
@@ -57,9 +58,6 @@ namespace RebalancedMoons
             {
                 harmony.PatchAll(typeof(WeatherRegistryCompat));
             }
-
-
-
 
             Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");
 
@@ -87,65 +85,13 @@ namespace RebalancedMoons
         {
             if (extendedMod == null) return;
             rebalancedMoonsMod = extendedMod;
-            reAdamanceExtended = rebalancedMoonsMod.ExtendedLevels[0];
-            reArtificeExtended = rebalancedMoonsMod.ExtendedLevels[1];
-            reAssuranceExtended = rebalancedMoonsMod.ExtendedLevels[2];
-            reDineExtended = rebalancedMoonsMod.ExtendedLevels[3];
-            reEmbrionExtended = rebalancedMoonsMod.ExtendedLevels[4];
-            reMarchExtended = rebalancedMoonsMod.ExtendedLevels[5];
-            reOffenseExtended = rebalancedMoonsMod.ExtendedLevels[6];
-            reRendExtended = rebalancedMoonsMod.ExtendedLevels[7];
-            reTitanExtended = rebalancedMoonsMod.ExtendedLevels[8];
         }
 
 
-        internal static void ApplyRebalance(ExtendedLevel input, ExtendedLevel output)
-        {
 
-            input.RoutePrice = output.RoutePrice;
-
-            input.SelectableLevel.Enemies = output.SelectableLevel.Enemies;
-            input.SelectableLevel.OutsideEnemies = output.SelectableLevel.OutsideEnemies;
-            input.SelectableLevel.DaytimeEnemies = output.SelectableLevel.DaytimeEnemies;
-
-            input.SelectableLevel.maxEnemyPowerCount = output.SelectableLevel.maxEnemyPowerCount;
-            input.SelectableLevel.maxOutsideEnemyPowerCount = output.SelectableLevel.maxOutsideEnemyPowerCount;
-            input.SelectableLevel.maxDaytimeEnemyPowerCount = output.SelectableLevel.maxDaytimeEnemyPowerCount;
-
-            input.SelectableLevel.spawnProbabilityRange = output.SelectableLevel.spawnProbabilityRange;
-            input.SelectableLevel.enemySpawnChanceThroughoutDay = output.SelectableLevel.enemySpawnChanceThroughoutDay;
-
-            input.SelectableLevel.daytimeEnemiesProbabilityRange = output.SelectableLevel.daytimeEnemiesProbabilityRange;
-            input.SelectableLevel.daytimeEnemySpawnChanceThroughDay = output.SelectableLevel.daytimeEnemySpawnChanceThroughDay;
-
-            input.SelectableLevel.outsideEnemySpawnChanceThroughDay = output.SelectableLevel.outsideEnemySpawnChanceThroughDay;
-
-            input.SelectableLevel.minScrap = output.SelectableLevel.minScrap;
-            input.SelectableLevel.maxScrap = output.SelectableLevel.maxScrap;
-
-            input.SelectableLevel.minTotalScrapValue = output.SelectableLevel.minTotalScrapValue;
-            input.SelectableLevel.maxTotalScrapValue = output.SelectableLevel.maxTotalScrapValue;
-
-            input.SelectableLevel.spawnableScrap.Clear();
-            input.SelectableLevel.spawnableScrap.AddRange(output.SelectableLevel.spawnableScrap);
-
-            ModNetworkHandler.Instance.WeatherServerRpc();
-
-            input.SelectableLevel.spawnableMapObjects = output.SelectableLevel.spawnableMapObjects;
-            input.SelectableLevel.spawnableOutsideObjects = output.SelectableLevel.spawnableOutsideObjects;
-
-            input.SelectableLevel.riskLevel = output.SelectableLevel.riskLevel;
-
-            input.SelectableLevel.videoReel = output.SelectableLevel.videoReel;
-
-
-            Logger.LogDebug("Rebalances applied for " + input + "!");
-        }
 
         internal class RebalancedMoonsPatches
         {
-
-
             static void InitMoons()
             {
                 if (!LethalLevelLoader.Plugin.IsSetupComplete)
@@ -155,24 +101,25 @@ namespace RebalancedMoons
 
                 foreach (ExtendedLevel extendedLevel in PatchedContent.VanillaExtendedLevels)
                 {
-                    RebalanceMoon(extendedLevel);
+                    SwapScene(extendedLevel);
                 }
             }
 
-            static void RebalanceMoon(ExtendedLevel extendedLevel)
+            static void SwapScene(ExtendedLevel extendedLevel)
             {
                 var planetActions = new Dictionary<string, Action<ExtendedLevel>>
-                {
+              {
                     { "Experimentation", level => { SetScene(level, "ReExperimentationScene"); } },
-                    { "Assurance", level => { ApplyRebalance(level, reAssuranceExtended); SetScene(level, "ReAssuranceScene"); } },
-                    { "Offense", level => { ApplyRebalance(level, reOffenseExtended); SetScene(level, "ReOffenseScene"); } },
-                    { "March", level => { ApplyRebalance(level, reMarchExtended); SetScene(level, "ReMarchScene"); } },
-                    { "Adamance", level => { ApplyRebalance(level, reAdamanceExtended); SetScene(level, "ReAdamanceScene"); } },
-                    { "Rend", level => { ApplyRebalance(level, reRendExtended); SetScene(level, "ReRendScene"); } },
-                    { "Dine", level => { ApplyRebalance(level, reDineExtended); SetScene(level, "ReDineScene"); } },
-                    { "Titan", level => { ApplyRebalance(level, reTitanExtended); SetScene(level, "ReTitanScene"); } },
-                    { "Artifice", level => { ApplyRebalance(level, reArtificeExtended); SetScene(level, "reArtificeScene"); } },
-                    { "Embrion", level => { ApplyRebalance(level, reEmbrionExtended); SetScene(level, "ReEmbrionScene"); } }
+                    { "Assurance", level => { SetScene(level, "ReAssuranceScene"); } },
+                    { "Offense", level => { SetScene(level, "ReOffenseScene"); } },
+                    { "Vow", level => { SetScene(level, "ReVowScene"); } },
+                    { "March", level => { SetScene(level, "ReMarchScene"); } },
+                    { "Adamance", level => { SetScene(level, "ReAdamanceScene"); } },
+                    { "Rend", level => { SetScene(level, "ReRendScene"); } },
+                    { "Dine", level => { SetScene(level, "ReDineScene"); } },
+                    { "Titan", level => { SetScene(level, "ReTitanScene"); } },
+                    { "Artifice", level => { SetScene(level, "ReArtificeScene"); } },
+                    { "Embrion", level => { SetScene(level, "ReEmbrionScene"); } }
                 };
 
                 if (planetActions.TryGetValue(extendedLevel.NumberlessPlanetName, out var action))
@@ -191,11 +138,14 @@ namespace RebalancedMoons
                     { "Experimentation", ModConfig.configExperimentationScene.Value },
                     { "Assurance", ModConfig.configAssuranceScene.Value },
                     { "Offense", ModConfig.configOffenseScene.Value },
+                    { "Vow", ModConfig.configVowScene.Value },
                     { "March", ModConfig.configMarchScene.Value },
                     { "Adamance", ModConfig.configAdamanceScene.Value },
+                    { "Rend", ModConfig.configRendScene.Value },
                     { "Dine", ModConfig.configDineScene.Value },
                     { "Titan", ModConfig.configTitanScene.Value },
-                    { "Embrion", ModConfig.configEmbrionScene.Value }
+                    { "Embrion", ModConfig.configEmbrionScene.Value },
+                    { "Artifice", ModConfig.configArtificeScene.Value }
                 };
 
                 if (planetSceneMapping.TryGetValue(extendedLevel.NumberlessPlanetName, out bool configValue))
@@ -212,6 +162,9 @@ namespace RebalancedMoons
                 ModNetworkHandler.SendLevelEvent += RebalancedMoonsPatches.ReceivedLevelFromServer;
                 SetupLobby(StartOfRound.Instance);
                 ModNetworkHandler.Instance.InteriorServerRpc();
+                ModNetworkHandler.Instance.MoonPriceServerRpc();
+                ModNetworkHandler.Instance.WeatherServerRpc();
+                ModNetworkHandler.Instance.MoonPropertiesServerRpc();
             }
 
             [HarmonyPatch(typeof(QuickMenuManager), nameof(QuickMenuManager.LeaveGameConfirm))]
@@ -220,8 +173,6 @@ namespace RebalancedMoons
             {
                 ModNetworkHandler.SendLevelEvent -= RebalancedMoonsPatches.ReceivedLevelFromServer;
             }
-
-
 
             [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.OnClientConnect))]
             [HarmonyPostfix]
@@ -274,11 +225,16 @@ namespace RebalancedMoons
                             case "VanillaSceneEvent":
                                 var vanillaSceneMapping = new Dictionary<string, string>
                                 {
-                                    { "ReOffenseScene", "Level7Offense" },
+                                    { "ReExperimentationScene", "Level1Experimentation"},
+                                    { "ReAssuranceScene", "Level2Assurance" },
+                                    { "ReVowScene", "Level3Vow" },
                                     { "ReMarchScene", "Level4March" },
-                                    { "ReAdamanceScene", "Level10Adamance" },
+                                    { "ReRendScene", "Level5Rend" },
                                     { "ReDineScene", "Level6Dine" },
-                                    { "ReTitanScene", "Level8Titan" }
+                                    { "ReOffenseScene", "Level7Offense" },
+                                    { "ReTitanScene", "Level8Titan" },
+                                    { "ReArtificeScene", "Level9Artifice" },
+                                    { "ReAdamanceScene", "Level10Adamance" }
                                 };
                                 if (vanillaSceneMapping.TryGetValue(patchedLevel.SelectableLevel.sceneName, out var vanillaScene))
                                 {
@@ -297,7 +253,6 @@ namespace RebalancedMoons
             [HarmonyPrefix]
             static void OnGenerateNewFloorPrefix(RoundManager __instance)
             {
-                ModUtil.initSceneOverrides();
                 if ((NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
                 {
 
@@ -364,7 +319,7 @@ namespace RebalancedMoons
             }
 
             // remove rebalanced moon levels from terminal
-
+/*
             [HarmonyPatch(typeof(TerminalManager), nameof(TerminalManager.GetExtendedLevelGroups))]
             [HarmonyPostfix]
             static void OnGetExtendedLevelGroupsPostfix(ref List<ExtendedLevelGroup> __result)
@@ -383,7 +338,7 @@ namespace RebalancedMoons
 
                     __result = newList;
                 }
-            }
+            }*/
         }
     }
 }

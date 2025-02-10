@@ -8,10 +8,10 @@ namespace RebalancedMoons
 
 
         internal static ConfigEntry<bool> configTitanLighting;
-        internal static ConfigEntry<bool> configExperimentationScene, configAssuranceScene, configOffenseScene, configAdamanceScene, configMarchScene, configDineScene, configTitanScene, configEmbrionScene;
+        internal static ConfigEntry<bool> configExperimentationScene, configVowScene, configAssuranceScene, configOffenseScene, configAdamanceScene, configMarchScene, configRendScene, configDineScene, configTitanScene, configEmbrionScene, configArtificeScene;
         internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
         internal static ConfigEntry<bool> configMarchDungeons, configDineDungeons, configTitanDungeons;
-        internal static ConfigEntry<bool> configWeatherOverrides;
+        internal static ConfigEntry<bool> configWeatherOverrides, configMoonPriceOverrides, configEmbrionBoulders, configTitanGold, configEmbrionGambling;
         internal static ConfigEntry<string> configMoonEntries;
         internal static void Init(ConfigFile cfg)
         {
@@ -37,11 +37,17 @@ namespace RebalancedMoons
             configOffenseScene = cfg.Bind("Server", "Offense Scene Overrides", true,
                 new ConfigDescription("Replaces Offense's scene with a new one using LLL."));
 
-            configAdamanceScene = cfg.Bind("Server", "Adamance Scene Overrides", true,
-                new ConfigDescription("Replaces Adamance's scene with a new one using LLL."));
+            configVowScene = cfg.Bind("Server", "Vow Scene Overrides", true,
+                new ConfigDescription("Replaces Vow's scene with a new one using LLL."));
 
             configMarchScene = cfg.Bind("Server", "March Scene Overrides", true,
                 new ConfigDescription("Replaces March's scene with a new one using LLL."));
+
+            configAdamanceScene = cfg.Bind("Server", "Adamance Scene Overrides", true,
+                new ConfigDescription("Replaces Adamance's scene with a new one using LLL."));
+
+            configRendScene = cfg.Bind("Server", "Rend Scene Overrides", true,
+                new ConfigDescription("Replaces Rend's scene with a new one using LLL."));
 
             configDineScene = cfg.Bind("Server", "Dine Scene Overrides", true,
                 new ConfigDescription("Replaces Dine's scene with a new one using LLL."));
@@ -51,6 +57,18 @@ namespace RebalancedMoons
 
             configEmbrionScene = cfg.Bind("Server", "Embrion Scene Overrides", true,
                 new ConfigDescription("Replaces Embrion's scene with a new one using LLL."));
+
+            configArtificeScene = cfg.Bind("Server", "Artifice Scene Overrides", true,
+                new ConfigDescription("Replaces Artifice's scene with a new one using LLL."));
+
+            configTitanGold = cfg.Bind("Server", "Titan Gold Bars", true,
+                new ConfigDescription("Adds gold bars to Titan's scrap pool."));
+
+            configEmbrionBoulders = cfg.Bind("Server", "Embrion Boulders", true,
+                new ConfigDescription("Adds randomly spawning boulders to Embrion."));
+
+            configEmbrionGambling = cfg.Bind("Server", "Embrion Gambling", true,
+                new ConfigDescription("Randomizes Embrion's scrap pool equally with every one handed item in the game."));
 
             configMarchDungeons = cfg.Bind("Server", "March Interior Overrides", true,
                 new ConfigDescription("REQUIRES RESTART WHEN DISABLING INGAME - Overrides the interior selections on March to include all vanilla interiors."));
@@ -64,6 +82,8 @@ namespace RebalancedMoons
             configWeatherOverrides = cfg.Bind("Server", "Weather Overrides", true,
                 new ConfigDescription("Enables weather overrides on rebalanced moons (Replaces Rainy w/ Foggy on Dine)"));
 
+            configMoonPriceOverrides = cfg.Bind("Server", "Price Overrides", true,
+                new ConfigDescription("Enables price overrides on rebalanced moons"));
 
             // --misc settings--
 
