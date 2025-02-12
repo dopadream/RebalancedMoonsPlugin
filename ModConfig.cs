@@ -11,7 +11,7 @@ namespace RebalancedMoons
         internal static ConfigEntry<bool> configExperimentationScene, configVowScene, configAssuranceScene, configOffenseScene, configAdamanceScene, configMarchScene, configRendScene, configDineScene, configTitanScene, configEmbrionScene, configArtificeScene;
         internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
         internal static ConfigEntry<bool> configMarchDungeons, configDineDungeons, configTitanDungeons;
-        internal static ConfigEntry<bool> configWeatherOverrides, configMoonPriceOverrides, configEmbrionBoulders, configTitanGold, configEmbrionGambling;
+        internal static ConfigEntry<bool> configWeatherOverrides, configMoonPriceOverrides, configEmbrionBoulders, configEmbrionGambling;
         internal static ConfigEntry<string> configMoonEntries;
         internal static void Init(ConfigFile cfg)
         {
@@ -60,9 +60,6 @@ namespace RebalancedMoons
 
             configArtificeScene = cfg.Bind("Server", "Artifice Scene Overrides", true,
                 new ConfigDescription("Replaces Artifice's scene with a new one using LLL."));
-
-            configTitanGold = cfg.Bind("Server", "Titan Gold Bars", true,
-                new ConfigDescription("Adds gold bars to Titan's scrap pool."));
 
             configEmbrionBoulders = cfg.Bind("Server", "Embrion Boulders", true,
                 new ConfigDescription("Adds randomly spawning boulders to Embrion."));

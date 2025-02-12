@@ -74,11 +74,6 @@ namespace RebalancedMoons
                 MoonPropertiesClientRpc("EmbrionGambling");
             }
 
-            if (ModConfig.configTitanGold.Value)
-            {
-                MoonPropertiesClientRpc("TitanGold");
-            }
-
         }
 
 
@@ -185,30 +180,6 @@ namespace RebalancedMoons
                                 }
                             }
                             break;
-                    }
-                }
-
-
-                if (configProperty == "TitanGold" && level.NumberlessPlanetName == "Titan")
-                {
-                    foreach (SpawnableItemWithRarity item in level.SelectableLevel.spawnableScrap)
-                    {
-                        if (item.spawnableItem.itemName == "Gold bar")
-                        {
-                            return;
-                        }
-                    }
-
-                    foreach (var item in StartOfRound.Instance.allItemsList.itemsList)
-                    {
-                        if (item.itemName == "Gold bar")
-                        {
-                            SpawnableItemWithRarity goldBar = new();
-                            goldBar.spawnableItem = item;
-                            goldBar.rarity = 15;
-                            level.SelectableLevel.spawnableScrap.Add(goldBar);
-                            break;
-                        }
                     }
                 }
             }
