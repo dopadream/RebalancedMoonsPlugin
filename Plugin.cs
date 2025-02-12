@@ -18,7 +18,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.6.4", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.6.6", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static SpawnableOutsideObject embrionBoulder1, embrionBoulder2, embrionBoulder3, embrionBoulder4;
@@ -184,21 +184,9 @@ namespace RebalancedMoons
             static void SetupLobby(StartOfRound __instance)
             {
 
-                foreach (SelectableLevel level in __instance.levels)
-                {
-                    switch (level.PlanetName)
-                    {
-                        case string a when a.Contains("Titan"):
-                            level.canSpawnMold = false;
-                            break;
-                        case string b when b.Contains("Embrion"):
-                            level.canSpawnMold = false;
-                            break;
-                    }
-                }
+                // yeah i know this is weird ok just leaving this method here in case i want to add anything extra 
 
                 InitMoons();
-                __instance.screenLevelVideoReel.Play();
             }
 
             public static void SendLevelToClients(int extendedLevel, string eventName, string sceneName)
