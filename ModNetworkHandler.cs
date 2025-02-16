@@ -1,5 +1,4 @@
-﻿using HarmonyLib;
-using LethalLevelLoader;
+﻿using LethalLevelLoader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -103,9 +102,13 @@ namespace RebalancedMoons
                 {
                     case "Dine":
                         {
-                            level.SelectableLevel.randomWeathers[2].weatherType = LevelWeatherType.Foggy;
-                            level.SelectableLevel.randomWeathers[2].weatherVariable = 4;
-                            level.SelectableLevel.randomWeathers[2].weatherVariable2 = 12;
+                            RandomWeatherWithVariables rainy = level.SelectableLevel.randomWeathers.FirstOrDefault(weather => weather.weatherType == LevelWeatherType.Rainy);
+                            if (rainy != null)
+                            {
+                                rainy.weatherType = LevelWeatherType.Foggy;
+                                rainy.weatherVariable = 4;
+                                rainy.weatherVariable2 = 12;
+                            }
                             break;
                         }
                     case "March":
