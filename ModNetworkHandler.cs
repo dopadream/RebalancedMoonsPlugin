@@ -143,11 +143,12 @@ namespace RebalancedMoons
                             var embyRockCurve = curveData.curve;
 
                             string[] boulderNames = { "LargeRock1Embrion", "LargeRock2Embrion", "LargeRock3Embrion", "LargeRock4Embrion" };
+                            SpawnableOutsideObject[] objectRefs = { Plugin.embrionBoulder1, Plugin.embrionBoulder2, Plugin.embrionBoulder3, Plugin.embrionBoulder4 };
                             var boulders = new List<SpawnableOutsideObjectWithRarity>();
 
                             for (int i = 0; i < boulderNames.Length; i++)
                             {
-                                var spawnableObj = LoadOutsideObject(ref Plugin.embrionBoulder1, boulderNames[i]);
+                                var spawnableObj = LoadOutsideObject(ref objectRefs[i], boulderNames[i]);
                                 if (spawnableObj == null)
                                 {
                                     Debug.LogError($"Failed to load object: {boulderNames[i]}");

@@ -12,7 +12,6 @@ namespace RebalancedMoons
         internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
         internal static ConfigEntry<bool> configMarchDungeons, configDineDungeons, configTitanDungeons;
         internal static ConfigEntry<bool> configWeatherOverrides, configMoonPriceOverrides, configEmbrionBoulders, configEmbrionGambling;
-        internal static ConfigEntry<string> configMoonEntries;
         internal static void Init(ConfigFile cfg)
         {
             // -client settings-
