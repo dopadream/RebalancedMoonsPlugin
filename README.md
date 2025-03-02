@@ -30,6 +30,6 @@ This mod updates some of the vanilla moons and reimplements every level using op
 
 # Credits
 
-Dine layout and mod inspiration: hivye 
-ButteRyBalance: ButteryStancakes
+Dine layout and mod inspiration: hivye \
+ButteRyBalance: ButteryStancakes \
 LethalLevelLoader: IAmBatby
