@@ -18,7 +18,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.6.10", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.7.0", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static SpawnableOutsideObject embrionBoulder1, embrionBoulder2, embrionBoulder3, embrionBoulder4;
@@ -53,6 +53,7 @@ namespace RebalancedMoons
 
             harmony.PatchAll(typeof(NetworkObjectManager));
             harmony.PatchAll(typeof(RebalancedMoonsPatches));
+            harmony.PatchAll(typeof(MoldBlockerLogic));
 
             if (Chainloader.PluginInfos.ContainsKey(WEATHER_REGISTRY))
             {
@@ -305,28 +306,6 @@ namespace RebalancedMoons
                     }
                 }
             }
-
-            // remove rebalanced moon levels from terminal
-/*
-            [HarmonyPatch(typeof(TerminalManager), nameof(TerminalManager.GetExtendedLevelGroups))]
-            [HarmonyPostfix]
-            static void OnGetExtendedLevelGroupsPostfix(ref List<ExtendedLevelGroup> __result)
-            {
-                List<ExtendedLevelGroup> newList = new List<ExtendedLevelGroup>();
-                if (rebalancedMoonsMod != null)
-                {
-
-                    foreach (ExtendedLevelGroup group in __result)
-                    {
-                        if (!group.extendedLevelsList.Any(x => rebalancedMoonsMod.ExtendedLevels.Any(y => y == x)))
-                        {
-                            newList.Add(group);
-                        }
-                    }
-
-                    __result = newList;
-                }
-            }*/
         }
     }
 }

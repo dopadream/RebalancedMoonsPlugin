@@ -189,116 +189,131 @@ namespace RebalancedMoons
             }
         }
 
-    public SpawnableOutsideObject LoadOutsideObject(ref SpawnableOutsideObject mapObject, string assetName)
-    {
-        if (mapObject == null)
+        public SpawnableOutsideObject LoadOutsideObject(ref SpawnableOutsideObject mapObject, string assetName)
         {
-            try
+            if (mapObject == null)
             {
-                mapObject = Plugin.Instance.EmbrionBundle.LoadAsset<SpawnableOutsideObject>(assetName);
-            }
-            catch (Exception ex)
-            {
-                Plugin.Logger.LogError($"Failed to load asset '{assetName}' from bundle 'embrionboulders': {ex.Message}");
-            }
-        }
-
-        return mapObject;
-    }
-
-    public BundledCurve LoadCurve(ref BundledCurve curveObject, string assetName)
-    {
-        if (curveObject == null)
-        {
-            try
-            {
-                curveObject = Plugin.Instance.EmbrionBundle.LoadAsset<BundledCurve>(assetName);
-            }
-            catch (Exception ex)
-            {
-                Plugin.Logger.LogError($"Failed to load asset '{assetName}' from bundle 'embrionboulders': {ex.Message}");
-            }
-        }
-
-        return curveObject;
-    }
-
-    [ClientRpc]
-    public void InteriorClientRpc(string name)
-    {
-        if (Plugin.rebalancedMoonsMod == null)
-            return;
-
-        foreach (ExtendedDungeonFlow extendedFlow in PatchedContent.ExtendedDungeonFlows)
-        {
-            var planetNames = extendedFlow.LevelMatchingProperties.planetNames;
-
-            switch (extendedFlow.DungeonFlow.name)
-            {
-                case "Level1Flow3Exits":
-                    planetNames.RemoveAll(p => p.Name.Equals("March") && name.Equals("March"));
-                    break;
-
-                case "Level1Flow":
-                    UpdateMoonInList(planetNames, "Titan", 140, name);
-                    AddMoonIfNotInList(planetNames, "March", 300, name);
-                    break;
-
-                case "Level2Flow":
-                    UpdateMoonInList(planetNames, "Titan", 40, name);
-                    AddMoonIfNotInList(planetNames, "March", 5, name);
-                    break;
-
-                case "Level3Flow":
-                    UpdateMoonInList(planetNames, "Dine", 50, name);
-                    UpdateMoonInList(planetNames, "Titan", 300, name);
-                    AddMoonIfNotInList(planetNames, "March", 190, name);
-                    break;
-            }
-        }
-
-
-        static void UpdateMoonInList(List<StringWithRarity> planetNames, string planetName, int newRarity, string configEvent)
-        {
-            foreach (var planet in planetNames)
-            {
-                if (planet.Name.Equals(planetName) && planet.Name.Equals(configEvent))
+                try
                 {
-                    planet.Rarity = newRarity;
+                    mapObject = Plugin.Instance.EmbrionBundle.LoadAsset<SpawnableOutsideObject>(assetName);
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Logger.LogError($"Failed to load asset '{assetName}' from bundle 'embrionboulders': {ex.Message}");
+                }
+            }
+
+            return mapObject;
+        }
+
+        public BundledCurve LoadCurve(ref BundledCurve curveObject, string assetName)
+        {
+            if (curveObject == null)
+            {
+                try
+                {
+                    curveObject = Plugin.Instance.EmbrionBundle.LoadAsset<BundledCurve>(assetName);
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Logger.LogError($"Failed to load asset '{assetName}' from bundle 'embrionboulders': {ex.Message}");
+                }
+            }
+
+            return curveObject;
+        }
+
+        [ClientRpc]
+        public void InteriorClientRpc(string name)
+        {
+            if (Plugin.rebalancedMoonsMod == null)
+                return;
+
+            foreach (ExtendedDungeonFlow extendedFlow in PatchedContent.ExtendedDungeonFlows)
+            {
+                var planetNames = extendedFlow.LevelMatchingProperties.planetNames;
+
+                switch (extendedFlow.DungeonFlow.name)
+                {
+                    case "Level1Flow3Exits":
+                        planetNames.RemoveAll(p => p.Name.Equals("March") && name.Equals("March"));
+                        break;
+
+                    case "Level1Flow":
+                        UpdateMoonInList(planetNames, "Titan", 140, name);
+                        AddMoonIfNotInList(planetNames, "March", 300, name);
+                        break;
+
+                    case "Level2Flow":
+                        UpdateMoonInList(planetNames, "Titan", 40, name);
+                        AddMoonIfNotInList(planetNames, "March", 5, name);
+                        break;
+
+                    case "Level3Flow":
+                        UpdateMoonInList(planetNames, "Dine", 50, name);
+                        UpdateMoonInList(planetNames, "Titan", 300, name);
+                        AddMoonIfNotInList(planetNames, "March", 190, name);
+                        break;
+                }
+            }
+
+
+            static void UpdateMoonInList(List<StringWithRarity> planetNames, string planetName, int newRarity, string configEvent)
+            {
+                foreach (var planet in planetNames)
+                {
+                    if (planet.Name.Equals(planetName) && planet.Name.Equals(configEvent))
+                    {
+                        planet.Rarity = newRarity;
+                    }
+                }
+            }
+
+            static void AddMoonIfNotInList(List<StringWithRarity> planetNames, string planetName, int rarity, string configEvent)
+            {
+                if (!planetNames.Any(p => p.Name.Equals(planetName) && p.Name.Equals(configEvent)))
+                {
+                    planetNames.Add(new StringWithRarity(planetName, rarity));
                 }
             }
         }
 
-        static void AddMoonIfNotInList(List<StringWithRarity> planetNames, string planetName, int rarity, string configEvent)
+
+
+        [ClientRpc]
+        public void DeactivateObjectClientRpc(string name)
         {
-            if (!planetNames.Any(p => p.Name.Equals(planetName) && p.Name.Equals(configEvent)))
+            var gameObject = GameObject.Find(name);
+
+            if (gameObject != null && gameObject.activeSelf)
             {
-                planetNames.Add(new StringWithRarity(planetName, rarity));
+                gameObject.SetActive(false);
             }
         }
-    }
 
 
-
-    [ClientRpc]
-    public void DeactivateObjectClientRpc(string name)
-    {
-        var gameObject = GameObject.Find(name);
-
-        if (gameObject != null && gameObject.activeSelf)
+        [ClientRpc]
+        public void LevelClientRpc(int extendedLevel, string eventName, string sceneName)
         {
-            gameObject.SetActive(false);
+            SendLevelEvent?.Invoke(extendedLevel, eventName, sceneName);
         }
+
+        public static event Action<int, String, String> SendLevelEvent;
+
+        [ServerRpc(RequireOwnership = false)]
+        public void KillWeedServerRpc(Vector3 weedPos)
+        {
+            KillWeedClientRpc(weedPos);
+        }
+
+        [ClientRpc]
+        public void KillWeedClientRpc(Vector3 weedPos)
+        {
+            if (!base.IsOwner)
+            {
+                UnityEngine.Object.FindObjectOfType<MoldSpreadManager>().DestroyMoldAtPosition(weedPos, playEffect: true);
+            }
+        }
+
     }
-
-
-    [ClientRpc]
-    public void LevelClientRpc(int extendedLevel, string eventName, string sceneName)
-    {
-        SendLevelEvent?.Invoke(extendedLevel, eventName, sceneName);
-    }
-
-    public static event Action<int, String, String> SendLevelEvent;
-
-}
 }
