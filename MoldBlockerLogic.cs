@@ -1,29 +1,40 @@
-﻿using HarmonyLib;
-using System.Collections.Generic;
-using UnityEngine;
-namespace RebalancedMoons
+﻿namespace RebalancedMoons
 {
+    using System.Collections.Generic;
+    using UnityEngine;
+    using HarmonyLib;
+
     internal class MoldBlockerLogic
     {
-
         [HarmonyPatch(typeof(RoundManager), "FinishGeneratingNewLevelClientRpc")]
         [HarmonyPostfix]
         private static void PostSpreadMold()
         {
+            Plugin.Logger.LogDebug("[MoldBlocker] Starting mold spread check...");
+
             Transform[] moldContainer = Object.FindAnyObjectByType<MoldSpreadManager>()?.moldContainer.GetComponentsInChildren<Transform>();
+            MoldDenialPoint[] moldDenialPoints = GameObject.FindObjectsByType<MoldDenialPoint>(FindObjectsSortMode.None);
 
-            MoldDenialPoint[] moldDenialPoints = GameObject.FindObjectsByType<MoldDenialPoint>(sortMode: FindObjectsSortMode.None);
+            if (moldContainer == null)
+            {
+                Plugin.Logger.LogWarning("[MoldBlocker] moldContainer is null!");
+                return;
+            }
 
-            float gridCellSize = 10f; 
+            Plugin.Logger.LogDebug($"[MoldBlocker] Found {moldContainer.Length} mold objects.");
+            Plugin.Logger.LogDebug($"[MoldBlocker] Found {moldDenialPoints.Length} mold denial points.");
+
+            float gridCellSize = 10f;
             SpatialGrid spatialGrid = new SpatialGrid(gridCellSize);
 
-            // population
+            // Populate the grid with mold denial points
             foreach (MoldDenialPoint denialPoint in moldDenialPoints)
             {
                 spatialGrid.AddObject(denialPoint.gameObject);
+                Plugin.Logger.LogDebug($"[MoldBlocker] Added denial point at {denialPoint.transform.position}");
             }
 
-            // go through all the shit
+            // Check all mold (weeds)
             foreach (Transform weed in moldContainer)
             {
                 if (weed == null) continue;
@@ -31,17 +42,20 @@ namespace RebalancedMoons
                 Vector3 weedPos = weed.position;
                 List<GameObject> nearbyDenialPoints = spatialGrid.GetNearbyObjects(weedPos);
 
+                Plugin.Logger.LogDebug($"[MoldBlocker] Checking weed at {weedPos}. Found {nearbyDenialPoints.Count} nearby denial points.");
+
                 foreach (GameObject denialPoint in nearbyDenialPoints)
                 {
-                    if ((denialPoint.transform.position - weedPos).sqrMagnitude < 100f) // 10^2 
+                    float distanceSqr = (denialPoint.transform.position - weedPos).sqrMagnitude;
+                    if (distanceSqr < 100f) // 10^2 to avoid sqrt
                     {
+                        Plugin.Logger.LogDebug($"[MoldBlocker] Killing weed at {weedPos} (Distance: {Mathf.Sqrt(distanceSqr)})");
                         ModNetworkHandler.Instance.KillWeedServerRpc(weedPos);
-                        break; // weed found in cell range
+                        break; // Stop checking after finding one valid denial point
                     }
                 }
             }
         }
-
 
         public class SpatialGrid
         {
@@ -51,6 +65,7 @@ namespace RebalancedMoons
             public SpatialGrid(float cellSize)
             {
                 this.cellSize = cellSize;
+                Plugin.Logger.LogDebug($"[SpatialGrid] Initialized with cell size {cellSize}");
             }
 
             private Vector2Int GetCell(Vector3 position)
@@ -64,14 +79,18 @@ namespace RebalancedMoons
                 if (!grid.ContainsKey(cell))
                 {
                     grid[cell] = new List<GameObject>();
+                    Plugin.Logger.LogDebug($"[SpatialGrid] Created new cell {cell}");
                 }
                 grid[cell].Add(obj);
+                Plugin.Logger.LogDebug($"[SpatialGrid] Added object {obj.name} to cell {cell}");
             }
 
             public List<GameObject> GetNearbyObjects(Vector3 position)
             {
                 Vector2Int cell = GetCell(position);
                 List<GameObject> nearbyObjects = new List<GameObject>();
+
+                Plugin.Logger.LogDebug($"[SpatialGrid] Looking for nearby objects at cell {cell}");
 
                 for (int x = -1; x <= 1; x++)
                 {
@@ -81,6 +100,7 @@ namespace RebalancedMoons
                         if (grid.ContainsKey(neighborCell))
                         {
                             nearbyObjects.AddRange(grid[neighborCell]);
+                            Plugin.Logger.LogDebug($"[SpatialGrid] Found {grid[neighborCell].Count} objects in cell {neighborCell}");
                         }
                     }
                 }

@@ -24,6 +24,17 @@ namespace RebalancedMoons
         internal static SpawnableOutsideObject embrionBoulder1, embrionBoulder2, embrionBoulder3, embrionBoulder4;
         internal static BundledCurve embyBoulderCurve;
         public AssetBundle NetworkBundle, EmbrionBundle;
+        static MoldSpreadManager _moldSpreadManager;
+        internal static MoldSpreadManager MoldSpreadManager
+        {
+            get
+            {
+                if (_moldSpreadManager == null)
+                    _moldSpreadManager = UnityEngine.Object.FindAnyObjectByType<MoldSpreadManager>();
+
+                return _moldSpreadManager;
+            }
+        }
 
         public Plugin()
         {

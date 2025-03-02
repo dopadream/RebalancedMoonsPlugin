@@ -311,9 +311,9 @@ namespace RebalancedMoons
         {
             if (!base.IsOwner)
             {
-                UnityEngine.Object.FindObjectOfType<MoldSpreadManager>().DestroyMoldAtPosition(weedPos, playEffect: true);
+                Plugin.MoldSpreadManager.DestroyMoldAtPosition(weedPos, playEffect: false);
+                Plugin.Logger.LogDebug($"Destroying weed at {weedPos}");
             }
         }
-
     }
 }
