@@ -6,7 +6,7 @@
 
     internal class MoldBlockerLogic
     {
-        [HarmonyPatch(typeof(RoundManager), "FinishGeneratingNewLevelClientRpc")]
+        [HarmonyPatch(typeof(MoldSpreadManager), "GenerateMold")]
         [HarmonyPostfix]
         private static void PostSpreadMold()
         {
@@ -43,6 +43,24 @@
                 List<GameObject> nearbyDenialPoints = spatialGrid.GetNearbyObjects(weedPos);
 
                 Plugin.Logger.LogDebug($"[MoldBlocker] Checking weed at {weedPos}. Found {nearbyDenialPoints.Count} nearby denial points.");
+
+                // Check for mold near the ship using OverlapSphere
+                Collider[] moldColliders = Physics.OverlapSphere(StartOfRound.Instance.elevatorTransform.position, 25f, 65536);
+
+                if (moldColliders.Length > 0)  // Only log if there's something found
+                {
+                    foreach (var moldCollider in moldColliders)
+                    {
+                        float distanceToShip = (StartOfRound.Instance.elevatorTransform.position - moldCollider.transform.position).sqrMagnitude;
+                        Plugin.Logger.LogDebug($"[MoldBlocker] Killing weed near ship at {moldCollider.transform.position} (Distance: {Mathf.Sqrt(distanceToShip)})");
+
+                        // Kill the weed at this position (prevents redundant calls)
+                        ModNetworkHandler.Instance.KillWeedServerRpc(moldCollider.transform.position);
+                        break; // Stop checking after the first valid moldCollider
+                    }
+                }
+
+                if (weed == null) continue; // Check if weed is still valid before continuing
 
                 foreach (GameObject denialPoint in nearbyDenialPoints)
                 {

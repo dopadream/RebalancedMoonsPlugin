@@ -309,11 +309,9 @@ namespace RebalancedMoons
         [ClientRpc]
         public void KillWeedClientRpc(Vector3 weedPos)
         {
-            if (!base.IsOwner)
-            {
-                Plugin.MoldSpreadManager.DestroyMoldAtPosition(weedPos, playEffect: false);
-                Plugin.Logger.LogDebug($"Destroying weed at {weedPos}");
-            }
+
+            Plugin.MoldSpreadManager.DestroyMoldAtPosition(weedPos, playEffect: false);
+            Plugin.Logger.LogDebug($"Destroying weed at {weedPos}");
         }
     }
 }
