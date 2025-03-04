@@ -47,7 +47,7 @@
                 // Check for mold near the ship using OverlapSphere
                 Collider[] moldColliders = Physics.OverlapSphere(StartOfRound.Instance.elevatorTransform.position, 25f, 65536);
 
-                if (moldColliders.Length > 0)  // Only log if there's something found
+                if (moldColliders.Length > 0)  // Only run if found
                 {
                     foreach (var moldCollider in moldColliders)
                     {
