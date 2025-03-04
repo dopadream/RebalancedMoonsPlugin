@@ -45,7 +45,7 @@
                 Plugin.Logger.LogDebug($"[MoldBlocker] Checking weed at {weedPos}. Found {nearbyDenialPoints.Count} nearby denial points.");
 
                 // Check for mold near the ship using OverlapSphere
-                Collider[] moldColliders = Physics.OverlapSphere(StartOfRound.Instance.elevatorTransform.position, 25f, 65536);
+                Collider[] moldColliders = Physics.OverlapSphere(StartOfRound.Instance.elevatorTransform.position, 20f, 65536);
 
                 if (moldColliders.Length > 0)  // Only run if found
                 {
@@ -53,8 +53,6 @@
                     {
                         float distanceToShip = (StartOfRound.Instance.elevatorTransform.position - moldCollider.transform.position).sqrMagnitude;
                         Plugin.Logger.LogDebug($"[MoldBlocker] Killing weed near ship at {moldCollider.transform.position} (Distance: {Mathf.Sqrt(distanceToShip)})");
-
-                        // Kill the weed at this position (prevents redundant calls)
                         ModNetworkHandler.Instance.KillWeedServerRpc(moldCollider.transform.position);
                         break; // Stop checking after the first valid moldCollider
                     }
