@@ -41,5 +41,5 @@ This mod updates some of the vanilla moons and reimplements every level using op
 Dine layout and mod inspiration: hivye \
 Artifice/Embrion building concepts: Narpy \
 ButteRyBalance: ButteryStancakes \
-Terrain Shader: Voxx \
+Terrain Shader: v0xx \
 LethalLevelLoader: IAmBatby
