@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace RebalancedMoons.ChameleonCompat
 
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons.chameleoncompat", PLUGIN_NAME = "RebalancedMoonsChameleonCompat", PLUGIN_VERSION = "0.0.2", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
+        const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons.chameleoncompat", PLUGIN_NAME = "RebalancedMoonsChameleonCompat", PLUGIN_VERSION = "0.0.4", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
         internal static new ManualLogSource Logger;
 
         void Awake()
@@ -31,10 +32,28 @@ namespace RebalancedMoons.ChameleonCompat
         static void OnApplyCosmeticInfoPostfix()
         {
             string levelName = StartOfRound.Instance.currentLevel.name;
-            if (levelName == "DineLevel")
+
+            switch (levelName)
             {
-                Chameleon.Common.currentLevelCosmeticInfo.fancyDoorPos = new(-156.5477f, -15.0669f, 16.7538f);
-                Chameleon.Common.currentLevelCosmeticInfo.fancyDoorRot = Quaternion.Euler(270f, -5.7088f, 0f);
+                case "DineLevel":
+                    Chameleon.Common.currentLevelCosmeticInfo.fancyDoorPos = new(-156.5477f, -15.0669f, 16.7538f);
+                    Chameleon.Common.currentLevelCosmeticInfo.fancyDoorRot = Quaternion.Euler(270f, -5.709f, 0f);
+                    break;
+                case "EmbrionLevel":
+                    if (Chainloader.PluginInfos.ContainsKey("MapImprovements"))  
+                    {
+                        if (GameObject.Find("Embrion_A(Clone)"))
+                        {
+                            break;
+                        }
+                    }
+                    Chameleon.Common.currentLevelCosmeticInfo.fancyDoorPos = new(-170.063f, 7.176f, -32.569f);
+                    Chameleon.Common.currentLevelCosmeticInfo.fancyDoorRot = Quaternion.Euler(270, 220.146805f, 0);
+                    break;
+                case "ArtificeLevel":
+                    Chameleon.Common.currentLevelCosmeticInfo.fancyDoorPos = new(36.552f, 0.021f, -160.742f);
+                    Chameleon.Common.currentLevelCosmeticInfo.fancyDoorRot = Quaternion.Euler(-90, 180f, 90.374f);
+                    break;
             }
         }
     }

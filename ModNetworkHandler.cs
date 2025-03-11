@@ -291,6 +291,25 @@ namespace RebalancedMoons
             }
         }
 
+        [ServerRpc(RequireOwnership = false)]
+        public void TriggerLadderServerRpc()
+        {
+            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Map/WaterDam/LadderObject/InteractTrigger");
+            ModNetworkHandler.Instance.TriggerLadderClientRpc();
+        }
+
+        [ClientRpc]
+        public void TriggerLadderClientRpc()
+        {
+            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Map/WaterDam/LadderObject/InteractTrigger");
+
+
+            foreach (Animator animator in ModUtil.SearchInLatestScene<Animator>().Where(anim => anim.gameObject.name == "LadderObject"))
+            {
+                animator.SetTrigger("used");
+            }
+        }
+
 
         [ClientRpc]
         public void LevelClientRpc(int extendedLevel, string eventName, string sceneName)
@@ -304,6 +323,15 @@ namespace RebalancedMoons
         public void KillWeedServerRpc(Vector3 weedPos)
         {
             KillWeedClientRpc(weedPos);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void KillShipWeedServerRpc(Vector3 weedPos)
+        {
+            if (ModConfig.configShipShrouds.Value)
+            {
+                KillWeedClientRpc(weedPos);
+            }
         }
 
         [ClientRpc]

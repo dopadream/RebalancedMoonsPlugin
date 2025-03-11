@@ -7,9 +7,9 @@ namespace RebalancedMoons
     {
 
 
-        internal static ConfigEntry<bool> configTitanLighting;
+        internal static ConfigEntry<bool> configTitanLighting, configIncreasedFog;
         internal static ConfigEntry<bool> configExperimentationScene, configVowScene, configAssuranceScene, configOffenseScene, configAdamanceScene, configMarchScene, configRendScene, configDineScene, configTitanScene, configEmbrionScene, configArtificeScene;
-        internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit;
+        internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit, configShipShrouds;
         internal static ConfigEntry<bool> configMarchDungeons, configDineDungeons, configTitanDungeons;
         internal static ConfigEntry<bool> configWeatherOverrides, configMoonPriceOverrides, configEmbrionBoulders, configEmbrionGambling;
         internal static void Init(ConfigFile cfg)
@@ -19,7 +19,13 @@ namespace RebalancedMoons
             configTitanLighting = cfg.Bind("Client", "Titan Lighting", true,
                 new ConfigDescription("Adds colder interior lighting to Titan."));
 
+            configIncreasedFog = cfg.Bind("Client", "Increased Volumetric Fog Distance", true,
+                new ConfigDescription("Increases the distance volumetric fog can be seen globally from 64 to 256. May impact performance on low end hardware."));
+
             // -server settings-
+
+            configShipShrouds = cfg.Bind("Server", "Sober ship", true,
+                new ConfigDescription("Blocks Vain Shrouds near the ship on all moons."));
 
             configMarchBridge = cfg.Bind("Server", "March Rickety Bridge", true,
                 new ConfigDescription("Adds a rickety bridge to March. Stats are inbetween Adamance and Vow."));

@@ -53,7 +53,7 @@
                     {
                         float distanceToShip = (StartOfRound.Instance.elevatorTransform.position - moldCollider.transform.position).sqrMagnitude;
                         Plugin.Logger.LogDebug($"[MoldBlocker] Killing weed near ship at {moldCollider.transform.position} (Distance: {Mathf.Sqrt(distanceToShip)})");
-                        ModNetworkHandler.Instance.KillWeedServerRpc(moldCollider.transform.position);
+                        ModNetworkHandler.Instance.KillShipWeedServerRpc(moldCollider.transform.position);
                         break; // Stop checking after the first valid moldCollider
                     }
                 }

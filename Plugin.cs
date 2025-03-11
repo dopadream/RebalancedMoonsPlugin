@@ -10,6 +10,8 @@ using System.IO;
 using System.Reflection;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace RebalancedMoons
 {
@@ -18,7 +20,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.7.0", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.7.2", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static SpawnableOutsideObject embrionBoulder1, embrionBoulder2, embrionBoulder3, embrionBoulder4;
@@ -295,23 +297,47 @@ namespace RebalancedMoons
                         }
                     }
                 }
-            }
 
-
-            [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.KillPlayerClientRpc))]
-            [HarmonyPostfix]
-            static void OnKillPlayerClientRpcPostfix(PlayerControllerB __instance)
-            {
-                if (ModConfig.configTitanLighting.Value && StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && (RoundManager.Instance.LevelRandom.Next(0, 2) != 0))
+                if (ModConfig.configIncreasedFog.Value)
                 {
-                    if (__instance.playersManager.connectedPlayersAmount >= 1 && __instance.playersManager.livingPlayers == 1)
+                    VolumeProfile globalProfile = GameObject.Find("/Systems/Rendering/VolumeMain").GetComponent<Volume>().sharedProfile;
+
+                    if (globalProfile != null)
                     {
-                        RoundManager.Instance.FlickerLights();
-                        foreach (Light light in RoundManager.Instance.allPoweredLights)
+                        foreach (VolumeComponent component in globalProfile.components)
                         {
-                            if (light != null)
+                            if (component.GetType() == typeof(Fog))
                             {
-                                light.color = new(0.4F, 0.425F, 0.45F, 1);
+                                Fog componentFog = (Fog)component;
+                                componentFog.depthExtent.overrideState = true;
+                                componentFog.depthExtent.value = 256;
+                                Logger.LogDebug("Global volumetric fog distance increased");
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Logger.LogDebug("Global volume is null for some reason");
+                    }
+                }
+
+
+                [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.KillPlayerClientRpc))]
+                [HarmonyPostfix]
+                static void OnKillPlayerClientRpcPostfix(PlayerControllerB __instance)
+                {
+                    if (ModConfig.configTitanLighting.Value && StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && (RoundManager.Instance.LevelRandom.Next(0, 2) != 0))
+                    {
+                        if (__instance.playersManager.connectedPlayersAmount >= 1 && __instance.playersManager.livingPlayers == 1)
+                        {
+                            RoundManager.Instance.FlickerLights();
+                            foreach (Light light in RoundManager.Instance.allPoweredLights)
+                            {
+                                if (light != null)
+                                {
+                                    light.color = new(0.4F, 0.425F, 0.45F, 1);
+                                }
                             }
                         }
                     }
