@@ -20,7 +20,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.7.3", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.7.6", WEATHER_REGISTRY = "mrov.WeatherRegistry";
         internal static new ManualLogSource Logger;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static SpawnableOutsideObject embrionBoulder1, embrionBoulder2, embrionBoulder3, embrionBoulder4;
@@ -48,6 +48,12 @@ namespace RebalancedMoons
         {
             Logger = base.Logger;
 
+            if (Chainloader.PluginInfos.ContainsKey("BMX.LobbyCompatibility"))
+            {
+                Plugin.Logger.LogInfo("CROSS-COMPATIBILITY - Lobby Compatibility detected");
+                LobbyCompatibility.Init();
+            }
+
             ModConfig.Init(Config);
 
             var dllFolderPath = Path.GetDirectoryName(Info.Location);
@@ -70,6 +76,7 @@ namespace RebalancedMoons
 
             if (Chainloader.PluginInfos.ContainsKey(WEATHER_REGISTRY))
             {
+                Plugin.Logger.LogInfo("CROSS-COMPATIBILITY - Weather Registry detected");
                 harmony.PatchAll(typeof(WeatherRegistryCompat));
             }
 
