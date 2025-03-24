@@ -17,10 +17,11 @@ namespace RebalancedMoons
 {
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     [BepInDependency(WEATHER_REGISTRY, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(LOBBY_COMPATIBILITY, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.7.6", WEATHER_REGISTRY = "mrov.WeatherRegistry";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.8.11", WEATHER_REGISTRY = "mrov.WeatherRegistry", LOBBY_COMPATIBILITY = "BMX.LobbyCompatibility";
         internal static new ManualLogSource Logger;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static SpawnableOutsideObject embrionBoulder1, embrionBoulder2, embrionBoulder3, embrionBoulder4;
@@ -48,7 +49,7 @@ namespace RebalancedMoons
         {
             Logger = base.Logger;
 
-            if (Chainloader.PluginInfos.ContainsKey("BMX.LobbyCompatibility"))
+            if (Chainloader.PluginInfos.ContainsKey(LOBBY_COMPATIBILITY))
             {
                 Plugin.Logger.LogInfo("CROSS-COMPATIBILITY - Lobby Compatibility detected");
                 LobbyCompatibility.Init();
@@ -262,24 +263,42 @@ namespace RebalancedMoons
             [HarmonyPrefix]
             static void OnGenerateNewFloorPrefix(RoundManager __instance)
             {
-                if ((NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
+                if ((NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer) && StartOfRound.Instance.currentLevel != null)
                 {
 
-                    if (!ModConfig.configTitanThirdFireExit.Value && StartOfRound.Instance.currentLevel != null)
+                    if (!ModConfig.configTitanThirdFireExit.Value)
                     {
                         if (StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && ModConfig.configTitanScene.Value)
                         {
-                            Plugin.Logger.LogDebug("Rebalanced Titan loaded, destroying 3rd fire exit...");
-                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Teleports/FireExitDoorContainerD");
+                            Plugin.Logger.LogDebug("Rebalanced Titan loaded, deactivating 3rd fire exit...");
+                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Teleports/ExtraFire");
                         }
                     }
 
-                    if (!ModConfig.configMarchBridge.Value && StartOfRound.Instance.currentLevel != null)
+                    if (!ModConfig.configMarchBridge.Value)
                     {
                         if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && ModConfig.configMarchScene.Value)
                         {
-                            Plugin.Logger.LogDebug("Rebalanced March loaded, destroying rickety bridge...");
+                            Plugin.Logger.LogDebug("Rebalanced March loaded, deactivating rickety bridge...");
                             ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/DangerousBridge");
+                        }
+                    }
+
+                    if (!ModConfig.configOffenseFirePath.Value)
+                    {
+                        if (StartOfRound.Instance.currentLevel.name.Equals("OffenseLevel") && ModConfig.configOffenseScene.Value)
+                        {
+                            Plugin.Logger.LogDebug("Rebalanced Offense loaded, deactivating new fire exit path...");
+                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Map/ExtraFirePath");
+                        }
+                    }
+
+                    if (!ModConfig.configVowLadder.Value)
+                    {
+                        if (StartOfRound.Instance.currentLevel.name.Equals("VowLevel") && ModConfig.configVowScene.Value)
+                        {
+                            Plugin.Logger.LogDebug("Rebalanced Vow loaded, deactivating ladder...");
+                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Map/WaterDam/LadderObject");
                         }
                     }
                 }

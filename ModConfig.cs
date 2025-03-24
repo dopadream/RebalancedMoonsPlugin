@@ -9,7 +9,7 @@ namespace RebalancedMoons
 
         internal static ConfigEntry<bool> configTitanLighting, configIncreasedFog;
         internal static ConfigEntry<bool> configExperimentationScene, configVowScene, configAssuranceScene, configOffenseScene, configAdamanceScene, configMarchScene, configRendScene, configDineScene, configTitanScene, configEmbrionScene, configArtificeScene;
-        internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit, configShipShrouds;
+        internal static ConfigEntry<bool> configMarchBridge, configTitanThirdFireExit, configOffenseFirePath, configVowLadder, configShipShrouds;
         internal static ConfigEntry<bool> configMarchDungeons, configDineDungeons, configTitanDungeons;
         internal static ConfigEntry<bool> configWeatherOverrides, configMoonPriceOverrides, configEmbrionBoulders, configEmbrionGambling;
         internal static void Init(ConfigFile cfg)
@@ -27,11 +27,17 @@ namespace RebalancedMoons
             configShipShrouds = cfg.Bind("Server", "Sober ship", true,
                 new ConfigDescription("Blocks Vain Shrouds near the ship on all moons."));
 
+            configVowLadder = cfg.Bind("Server", "Vow Rope Ladder", true,
+                new ConfigDescription("Adds a rope ladder to the dam on Vow. Must be activated from the top of the dam every round."));
+
             configMarchBridge = cfg.Bind("Server", "March Rickety Bridge", true,
                 new ConfigDescription("Adds a rickety bridge to March. Stats are inbetween Adamance and Vow."));
 
-            configTitanThirdFireExit = cfg.Bind("Server", "Titan Third Fire Exit", false,
-                new ConfigDescription("Adds a 3rd fire exit to Titan under the first one. Off by default as it's a bit overpowered."));
+            configOffenseFirePath = cfg.Bind("Server", "Offense Fire Exit Path", true,
+                new ConfigDescription("Adds a lengthy route to the fire exit on Offense via new climbable rocks. Marked by a tall silo."));
+
+            configTitanThirdFireExit = cfg.Bind("Server", "Titan Third Fire Exit", true,
+                new ConfigDescription("Adds a 3rd fire exit to Titan in the vacant snowy area of the map. Marked by a guide light pole."));
 
             configExperimentationScene = cfg.Bind("Server", "Experimentation Scene Overrides", true,
                 new ConfigDescription("Replaces Experimentation's scene with a new one using LLL."));
