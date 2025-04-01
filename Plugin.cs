@@ -7,11 +7,13 @@ using LethalLevelLoader;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
+using static UnityEngine.Rendering.HighDefinition.ScalableSettingLevelParameter;
 
 namespace RebalancedMoons
 {
@@ -21,7 +23,7 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.9.3", WEATHER_REGISTRY = "mrov.WeatherRegistry", LOBBY_COMPATIBILITY = "BMX.LobbyCompatibility";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.10.0", WEATHER_REGISTRY = "mrov.WeatherRegistry", LOBBY_COMPATIBILITY = "BMX.LobbyCompatibility";
         internal static new ManualLogSource Logger;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static SpawnableOutsideObject embrionBoulder1, embrionBoulder2, embrionBoulder3, embrionBoulder4;
@@ -124,6 +126,7 @@ namespace RebalancedMoons
                 foreach (ExtendedLevel extendedLevel in PatchedContent.VanillaExtendedLevels)
                 {
                     SwapScene(extendedLevel);
+
                 }
             }
 
@@ -275,14 +278,16 @@ namespace RebalancedMoons
                         }
                     }
 
-                    if (!ModConfig.configMarchBridge.Value)
+                    if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && ModConfig.configMarchScene.Value)
                     {
-                        if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && ModConfig.configMarchScene.Value)
+                        if (!ModConfig.configMarchBridge.Value)
                         {
                             Plugin.Logger.LogDebug("Rebalanced March loaded, deactivating rickety bridge...");
                             ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/DangerousBridge");
                         }
+                        ModNetworkHandler.Instance.DeactivateEntranceClientRpc();
                     }
+                
 
                     if (!ModConfig.configOffenseFirePath.Value)
                     {

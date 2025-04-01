@@ -72,7 +72,6 @@ namespace RebalancedMoons
             {
                 MoonPropertiesClientRpc("EmbrionGambling");
             }
-
         }
 
 
@@ -90,6 +89,12 @@ namespace RebalancedMoons
                         }
                 }
             }
+        }
+
+        [ClientRpc]
+        public void DeactivateEntranceClientRpc()
+        {
+            RoundManager.FindMainEntranceScript(true).isEntranceToBuilding = false;
         }
 
 
@@ -113,8 +118,8 @@ namespace RebalancedMoons
                         }
                     case "March":
                         {
-                            level.SelectableLevel.overrideWeather = true;
-                            level.SelectableLevel.overrideWeatherType = LevelWeatherType.Rainy;
+                            //level.SelectableLevel.overrideWeather = true;
+                            //level.SelectableLevel.overrideWeatherType = LevelWeatherType.Rainy;
                             break;
                         }
                 }
@@ -128,12 +133,13 @@ namespace RebalancedMoons
 
             foreach (ExtendedLevel level in PatchedContent.VanillaExtendedLevels)
             {
-                if (level.NumberlessPlanetName == "Embrion")
+                switch (configProperty)
                 {
-                    switch (configProperty)
-                    {
 
-                        case ("EmbrionBoulders"):
+                    case ("EmbrionBoulders"):
+
+                        if (level.NumberlessPlanetName == "Artifice")
+                        {
                             var curveData = LoadCurve(ref Plugin.embyBoulderCurve, "EmbrionRockCurve");
                             if (curveData == null || curveData.curve == null)
                             {
@@ -164,8 +170,11 @@ namespace RebalancedMoons
                             }
 
                             level.SelectableLevel.spawnableOutsideObjects = boulders.ToArray();
-                            break;
-                        case ("EmbrionGambling"):
+                        }
+                        break;
+                    case ("EmbrionGambling"):
+                        if (level.NumberlessPlanetName == "Embrion")
+                        {
                             level.SelectableLevel.spawnableScrap.Clear();
                             foreach (var item in StartOfRound.Instance.allItemsList.itemsList)
                             {
@@ -183,11 +192,11 @@ namespace RebalancedMoons
                                     level.SelectableLevel.spawnableScrap.Add(spawnableItem);
                                 }
                             }
-                            break;
+                        }
+                        break;
                     }
                 }
             }
-        }
 
         public SpawnableOutsideObject LoadOutsideObject(ref SpawnableOutsideObject mapObject, string assetName)
         {
