@@ -4,16 +4,17 @@ This mod updates some of the vanilla moons and reimplements every level using op
 
 # List of changes
 - Terrain has a new shader with less stretching
+- More consistent and optimized reverb triggers
+- Default volumetric fog distance increased for improved visuals
 - Lights on the outside are now tied to building power
 - Vain Shroud growth has been tweaked and no longer grows in inappropriate areas
 - Vow has a rope ladder that you can drop down from the dam
 - Offense now has an alternate, but long route that you can take to get to fire exit. There's a new silo on the map that marks where you need to go.
-- March's left fire exit was moved to the right of the ship to create a more evenly distanced triangle of fire exits around the moon. It's also a slightly shorter walk.
 - March now has a water tower hinting at the back fire exit's location.
 - Don't cross the rickety bridge on March.. You'll get lost!
 - March can now spawn other vanilla interiors by default.
 - March has constant rain, as advertised! 
-- Titan now has 2 fire exits (with an optional 3rd one).
+- Titan now has 3 fire exits, one being over a deadly jump on a catwalk, and the other being in the abyss of the fog.
 - Dine now has two fire exits, one requiring an extension ladder or a jetpack
 - Dine's terrain was slightly edited to allow for an alternate route from the right fire exit.
 - Dine now has guide light poles that go towards main, and the fence in the middle of the map was moved back so the moon is more cruiser friendly.
@@ -33,6 +34,8 @@ This mod updates some of the vanilla moons and reimplements every level using op
 <img src="https://i.ibb.co/nrrkyM2/Image.png">
 <img src="https://i.ibb.co/SxfSqc7/Image.png">
 <img src="https://i.ibb.co/mH2mdYD/Image.png">
+<img src="https://i.ibb.co/4ZgNDvp9/image.png" width="549">
+<img src="https://i.ibb.co/LDY3yWk4/image.png" width="549">
 </details>
 
 
