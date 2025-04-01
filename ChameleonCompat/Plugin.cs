@@ -7,18 +7,27 @@ using UnityEngine;
 namespace RebalancedMoons.ChameleonCompat
 {
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
-    [BepInDependency(CHAMELEON, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(CHAMELEON, BepInDependency.DependencyFlags.SoftDependency)]
 
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons.chameleoncompat", PLUGIN_NAME = "RebalancedMoonsChameleonCompat", PLUGIN_VERSION = "0.0.4", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
+        const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons.chameleoncompat", PLUGIN_NAME = "RebalancedMoonsChameleonCompat", PLUGIN_VERSION = "0.0.5", CHAMELEON = "butterystancakes.lethalcompany.chameleon";
         internal static new ManualLogSource Logger;
 
         void Awake()
         {
             Logger = base.Logger;
 
-            new Harmony(PLUGIN_GUID).PatchAll();
+
+            if (Chainloader.PluginInfos.ContainsKey("butterystancakes.lethalcompany.chameleon"))
+            {
+                Plugin.Logger.LogInfo("CROSS-COMPATIBILITY - Chameleon detected");
+                new Harmony(PLUGIN_GUID).PatchAll();
+            } else
+            {
+                Plugin.Logger.LogWarning("CROSS-COMPATIBILITY - Chameleon could not be detected");
+                return;
+            }
 
             Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");
         }
