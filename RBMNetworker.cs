@@ -1,28 +1,109 @@
-﻿using LethalLevelLoader;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using HarmonyLib;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using Unity.Netcode;
 using UnityEngine;
+using LethalLevelLoader;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace RebalancedMoons
 {
-    public class ModNetworkHandler : NetworkBehaviour
+
+    internal class RBMNetworker : NetworkBehaviour
     {
 
-        public static ModNetworkHandler Instance { get; private set; }
+        internal static GameObject networkPrefab;
+        internal static RBMNetworker Instance { get; private set; }
+
+        [HarmonyPatch(typeof(GameNetworkManager), nameof(GameNetworkManager.Start))]
+        [HarmonyPostfix]
+        public static void Init()
+        {
+            if (networkPrefab != null)
+            {
+                Plugin.Logger.LogDebug("Skipped network handler registration, because it has already been initialized");
+                return;
+            }
+
+            // thanks to ButteryStancakes for the following code!!
+
+            try
+            {
+                // create "prefab" to hold our network references
+                networkPrefab = new(nameof(RBMNetworker))
+                {
+                    hideFlags = HideFlags.HideAndDontSave
+                };
+
+                // assign a unique hash so it can be network registered
+                NetworkObject netObj = networkPrefab.AddComponent<NetworkObject>();
+                byte[] hash = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(Assembly.GetCallingAssembly().GetName().Name + networkPrefab.name));
+                netObj.GlobalObjectIdHash = System.BitConverter.ToUInt32(hash, 0);
+
+                // and now it holds our network handler!
+                networkPrefab.AddComponent<RBMNetworker>();
+
+                // register it, and then it can be spawned
+                NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
+
+                Plugin.Logger.LogDebug("Successfully registered network handler. This is good news!");
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Logger.LogError($"Encountered some fatal error while registering network handler. The mod will not function like this!\n{e}");
+            }
+
+        }
+
+        internal static void Create()
+        {
+            try
+            {
+                if (NetworkManager.Singleton.IsServer && networkPrefab != null)
+                    Instantiate(networkPrefab).GetComponent<NetworkObject>().Spawn();
+            }
+            catch
+            {
+                Plugin.Logger.LogError($"Encountered some fatal error while spawning network handler. It is likely that registration failed earlier on start-up, please consult your logs.");
+            }
+        }
+
+        void Awake()
+        {
+            Instance = this;
+        }
 
         public override void OnNetworkSpawn()
         {
-            SendLevelEvent = null;
-
-
-            if ((NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer) && Instance != null)
-            {
-                Instance?.gameObject.GetComponent<NetworkObject>().Despawn();
-            }
-            Instance = this;
             base.OnNetworkSpawn();
+            if (Instance != this)
+            {
+                if (Instance.TryGetComponent(out NetworkObject netObj) && !netObj.IsSpawned && Instance != networkPrefab)
+                    Destroy(Instance);
+
+                Plugin.Logger.LogWarning($"There are 2 {nameof(RBMNetworker)}s instantiated, and the wrong one was assigned as Instance. This shouldn't happen, but is recoverable");
+
+                Instance = this;
+            }
+            Plugin.Logger.LogDebug("Successfully spawned network handler.");
+        }
+
+
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.Awake))]
+        [HarmonyPostfix]
+        public static void StartOfRoundWake()
+        {
+            Create();
+        }
+
+        void Start()
+        {
+            if (this != Instance || !IsSpawned)
+                return;
+
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -294,14 +375,14 @@ namespace RebalancedMoons
         [ServerRpc(RequireOwnership = false)]
         public void TriggerLadderServerRpc()
         {
-            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Map/WaterDam/LadderObject/InteractTrigger");
-            ModNetworkHandler.Instance.TriggerLadderClientRpc();
+            RBMNetworker.Instance.DeactivateObjectClientRpc("Environment/Map/WaterDam/LadderObject/InteractTrigger");
+            RBMNetworker.Instance.TriggerLadderClientRpc();
         }
 
         [ClientRpc]
         public void TriggerLadderClientRpc()
         {
-            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Map/WaterDam/LadderObject/InteractTrigger");
+            RBMNetworker.Instance.DeactivateObjectClientRpc("Environment/Map/WaterDam/LadderObject/InteractTrigger");
 
 
             foreach (Animator animator in ModUtil.SearchInLatestScene<Animator>().Where(anim => anim.gameObject.name == "LadderObject"))

@@ -21,12 +21,12 @@ namespace RebalancedMoons
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.12.0", WEATHER_REGISTRY = "mrov.WeatherRegistry", LOBBY_COMPATIBILITY = "BMX.LobbyCompatibility";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.13.0", WEATHER_REGISTRY = "mrov.WeatherRegistry", LOBBY_COMPATIBILITY = "BMX.LobbyCompatibility";
         internal static new ManualLogSource Logger;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static SpawnableOutsideObject embrionBoulder1, embrionBoulder2, embrionBoulder3, embrionBoulder4;
         internal static BundledCurve embyBoulderCurve;
-        public AssetBundle NetworkBundle, EmbrionBundle;
+        public AssetBundle EmbrionBundle;
         static MoldSpreadManager _moldSpreadManager;
         internal static MoldSpreadManager MoldSpreadManager
         {
@@ -59,9 +59,6 @@ namespace RebalancedMoons
 
             var dllFolderPath = Path.GetDirectoryName(Info.Location);
 
-            var networkBundleFilePath = Path.Combine(dllFolderPath, "networkprefab");
-            NetworkBundle = AssetBundle.LoadFromFile(networkBundleFilePath);
-
             var embrionBundleFilePath = Path.Combine(dllFolderPath, "embrionboulders");
             EmbrionBundle = AssetBundle.LoadFromFile(embrionBundleFilePath);
 
@@ -71,7 +68,7 @@ namespace RebalancedMoons
 
             Harmony harmony = new Harmony(PLUGIN_GUID);
 
-            harmony.PatchAll(typeof(NetworkObjectManager));
+            harmony.PatchAll(typeof(RBMNetworker));
             harmony.PatchAll(typeof(RebalancedMoonsPatches));
             harmony.PatchAll(typeof(MoldBlockerLogic));
 
@@ -181,19 +178,19 @@ namespace RebalancedMoons
             [HarmonyPostfix]
             static void SubscribeToHandler()
             {
-                ModNetworkHandler.SendLevelEvent += RebalancedMoonsPatches.ReceivedLevelFromServer;
+                RBMNetworker.SendLevelEvent += RebalancedMoonsPatches.ReceivedLevelFromServer;
                 SetupLobby(StartOfRound.Instance);
-                ModNetworkHandler.Instance.InteriorServerRpc();
-                ModNetworkHandler.Instance.MoonPriceServerRpc();
-                ModNetworkHandler.Instance.WeatherServerRpc();
-                ModNetworkHandler.Instance.MoonPropertiesServerRpc();
+                RBMNetworker.Instance.InteriorServerRpc();
+                RBMNetworker.Instance.MoonPriceServerRpc();
+                RBMNetworker.Instance.WeatherServerRpc();
+                RBMNetworker.Instance.MoonPropertiesServerRpc();
             }
 
             [HarmonyPatch(typeof(QuickMenuManager), nameof(QuickMenuManager.LeaveGameConfirm))]
             [HarmonyPostfix]
             static void UnsubscribeFromHandler()
             {
-                ModNetworkHandler.SendLevelEvent -= RebalancedMoonsPatches.ReceivedLevelFromServer;
+                RBMNetworker.SendLevelEvent -= RebalancedMoonsPatches.ReceivedLevelFromServer;
             }
 
             [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.OnClientConnect))]
@@ -216,7 +213,7 @@ namespace RebalancedMoons
                 if (!(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
                     return;
 
-                ModNetworkHandler.Instance.LevelClientRpc(extendedLevel, eventName, sceneName);
+                RBMNetworker.Instance.LevelClientRpc(extendedLevel, eventName, sceneName);
             }
 
             public static void ReceivedLevelFromServer(int extendedLevel, string eventName, string sceneName)
@@ -271,7 +268,7 @@ namespace RebalancedMoons
                         if (StartOfRound.Instance.currentLevel.name.Equals("TitanLevel") && ModConfig.configTitanScene.Value)
                         {
                             Plugin.Logger.LogDebug("Rebalanced Titan loaded, deactivating 3rd fire exit...");
-                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Teleports/ExtraFire");
+                            RBMNetworker.Instance.DeactivateObjectClientRpc("Environment/Teleports/ExtraFire");
                         }
                     }
 
@@ -280,7 +277,7 @@ namespace RebalancedMoons
                         if (StartOfRound.Instance.currentLevel.name.Equals("MarchLevel") && ModConfig.configMarchScene.Value)
                         {
                             Plugin.Logger.LogDebug("Rebalanced March loaded, deactivating rickety bridge...");
-                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/DangerousBridge");
+                            RBMNetworker.Instance.DeactivateObjectClientRpc("Environment/DangerousBridge");
                         }
                     }
 
@@ -289,7 +286,7 @@ namespace RebalancedMoons
                         if (StartOfRound.Instance.currentLevel.name.Equals("OffenseLevel") && ModConfig.configOffenseScene.Value)
                         {
                             Plugin.Logger.LogDebug("Rebalanced Offense loaded, deactivating new fire exit path...");
-                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Map/ExtraFirePath");
+                            RBMNetworker.Instance.DeactivateObjectClientRpc("Environment/Map/ExtraFirePath");
                         }
                     }
 
@@ -298,7 +295,7 @@ namespace RebalancedMoons
                         if (StartOfRound.Instance.currentLevel.name.Equals("VowLevel") && ModConfig.configVowScene.Value)
                         {
                             Plugin.Logger.LogDebug("Rebalanced Vow loaded, deactivating ladder...");
-                            ModNetworkHandler.Instance.DeactivateObjectClientRpc("Environment/Map/WaterDam/LadderObject");
+                            RBMNetworker.Instance.DeactivateObjectClientRpc("Environment/Map/WaterDam/LadderObject");
                         }
                     }
                 }

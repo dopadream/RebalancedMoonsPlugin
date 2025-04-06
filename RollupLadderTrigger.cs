@@ -11,7 +11,7 @@ namespace RebalancedMoons
 
         public void TriggerLadder(PlayerControllerB playerWhoTriggered)
         {
-            ModNetworkHandler.Instance.TriggerLadderServerRpc();
+            RBMNetworker.Instance.TriggerLadderServerRpc();
             PlayAudio();
         }
 

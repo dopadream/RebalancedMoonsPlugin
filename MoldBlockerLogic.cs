@@ -53,7 +53,7 @@
                     {
                         float distanceToShip = (StartOfRound.Instance.elevatorTransform.position - moldCollider.transform.position).sqrMagnitude;
                         Plugin.Logger.LogDebug($"[MoldBlocker] Killing weed near ship at {moldCollider.transform.position} (Distance: {Mathf.Sqrt(distanceToShip)})");
-                        ModNetworkHandler.Instance.KillShipWeedServerRpc(moldCollider.transform.position);
+                        RBMNetworker.Instance.KillShipWeedServerRpc(moldCollider.transform.position);
                         break; // Stop checking after the first valid moldCollider
                     }
                 }
@@ -66,7 +66,7 @@
                     if (distanceSqr < 100f) // 10^2 to avoid sqrt
                     {
                         Plugin.Logger.LogDebug($"[MoldBlocker] Killing weed at {weedPos} (Distance: {Mathf.Sqrt(distanceSqr)})");
-                        ModNetworkHandler.Instance.KillWeedServerRpc(weedPos);
+                        RBMNetworker.Instance.KillWeedServerRpc(weedPos);
                         break; // Stop checking after finding one valid denial point
                     }
                 }
