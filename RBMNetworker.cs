@@ -78,6 +78,8 @@ namespace RebalancedMoons
 
         public override void OnNetworkSpawn()
         {
+            SendLevelEvent = null;
+
             base.OnNetworkSpawn();
             if (Instance != this)
             {
