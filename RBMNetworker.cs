@@ -40,8 +40,7 @@ namespace RebalancedMoons
 
                 // assign a unique hash so it can be network registered
                 NetworkObject netObj = networkPrefab.AddComponent<NetworkObject>();
-                byte[] hash = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(Assembly.GetCallingAssembly().GetName().Name + networkPrefab.name));
-                netObj.GlobalObjectIdHash = System.BitConverter.ToUInt32(hash, 0);
+                netObj.GlobalObjectIdHash = (Plugin.PLUGIN_GUID + networkPrefab.name).Hash32();
 
                 // and now it holds our network handler!
                 networkPrefab.AddComponent<RBMNetworker>();
