@@ -1,9 +1,10 @@
 ﻿using GameNetcodeStuff;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace RebalancedMoons
 {
-    public class RollupLadderTrigger : MonoBehaviour
+    public class RollupLadderTrigger : NetworkBehaviour
     {
         public AudioSource thisAudioSource;
 
@@ -12,10 +13,15 @@ namespace RebalancedMoons
         public void TriggerLadder(PlayerControllerB playerWhoTriggered)
         {
             RBMNetworker.Instance.TriggerLadderServerRpc();
-            PlayAudio();
         }
 
-        private void PlayAudio()
+        public void TriggerSound(PlayerControllerB playerWhoTriggered)
+        {
+            PlayAudioClientRpc();
+        }
+
+        [ClientRpc]
+        private void PlayAudioClientRpc()
         {
 
             if (GameNetworkManager.Instance.localPlayerController == null || thisAudioSource == null)

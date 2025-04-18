@@ -392,7 +392,6 @@ namespace RebalancedMoons
             }
         }
 
-
         [ClientRpc]
         public void LevelClientRpc(int extendedLevel, string eventName, string sceneName)
         {
