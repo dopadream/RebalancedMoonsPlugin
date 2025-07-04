@@ -180,10 +180,6 @@ namespace RebalancedMoons
             {
                 RBMNetworker.SendLevelEvent += RebalancedMoonsPatches.ReceivedLevelFromServer;
                 SetupLobby(StartOfRound.Instance);
-                RBMNetworker.Instance.InteriorServerRpc();
-                RBMNetworker.Instance.MoonPriceServerRpc();
-                RBMNetworker.Instance.WeatherServerRpc();
-                RBMNetworker.Instance.MoonPropertiesServerRpc();
             }
 
             [HarmonyPatch(typeof(QuickMenuManager), nameof(QuickMenuManager.LeaveGameConfirm))]
@@ -206,6 +202,11 @@ namespace RebalancedMoons
                 // yeah i know this is weird ok just leaving this method here in case i want to add anything extra 
 
                 InitMoons();
+
+                RBMNetworker.Instance.InteriorServerRpc();
+                RBMNetworker.Instance.MoonPriceServerRpc();
+                RBMNetworker.Instance.WeatherServerRpc();
+                RBMNetworker.Instance.MoonPropertiesServerRpc();
             }
 
             public static void SendLevelToClients(int extendedLevel, string eventName, string sceneName)
