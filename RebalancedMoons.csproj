@@ -56,13 +56,13 @@
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="LethalLevelLoader" Publicize="true">
-      <HintPath>C:\Users\Stephanie\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\moon test\BepInEx\plugins\IAmBatby-LethalLevelLoader\LethalLevelLoader.dll</HintPath>
+      <HintPath>C:\Users\Owner\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\Default\BepInEx\plugins\IAmBatby-LethalLevelLoader\LethalLevelLoader.dll</HintPath>
     </Reference>
     <Reference Include="WeatherRegistry">
-      <HintPath>C:\Users\Stephanie\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\moon test\BepInEx\plugins\mrov-WeatherRegistry\WeatherRegistry.dll</HintPath>
+      <HintPath>C:\Users\Owner\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\Default\BepInEx\plugins\mrov-WeatherRegistry\WeatherRegistry.dll</HintPath>
     </Reference>
     <Reference Include="Chameleon" Publicize="true">
-      <HintPath>C:\Users\Stephanie\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\moon test\BepInEx\plugins\ButteryStancakes-Chameleon\Chameleon.dll</HintPath>
+      <HintPath>C:\Users\Owner\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\Default\BepInEx\plugins\ButteryStancakes-Chameleon\Chameleon.dll</HintPath>
     </Reference>
   </ItemGroup>
 <ItemGroup>
