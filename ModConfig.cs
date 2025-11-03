@@ -14,6 +14,9 @@ namespace RebalancedMoons
         internal static ConfigEntry<bool> configWeatherOverrides, configMoonPriceOverrides, configEmbrionBoulders, configEmbrionGambling;
         internal static void Init(ConfigFile cfg)
         {
+            // Disable saving config after a call to 'Bind()' is made.
+            cfg.SaveOnConfigSet = false;
+
             // -client settings-
 
             configTitanLighting = cfg.Bind("Client", "Titan Lighting", true,
@@ -92,6 +95,13 @@ namespace RebalancedMoons
 
             configMoonPriceOverrides = cfg.Bind("Server", "Price Overrides", true,
                 new ConfigDescription("Enables price overrides on rebalanced moons"));
+
+            // Remove old config settings.
+            cfg.OrphanedEntries.Clear();
+
+            // Re-enable saving and save config.
+            cfg.SaveOnConfigSet = true;
+            cfg.Save();
         }
     }
 }
