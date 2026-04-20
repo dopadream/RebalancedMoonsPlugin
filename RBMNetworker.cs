@@ -48,6 +48,9 @@ namespace RebalancedMoons
                 // register it, and then it can be spawned
                 NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
 
+                // spawn before LLL starts loading content
+                LethalLevelLoader.Plugin.onBeforeSetup += Create;
+
                 Plugin.Logger.LogDebug("Successfully registered network handler. This is good news!");
             }
             catch (System.Exception e)
@@ -90,14 +93,6 @@ namespace RebalancedMoons
                 Instance = this;
             }
             Plugin.Logger.LogDebug("Successfully spawned network handler.");
-        }
-
-
-        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.Awake))]
-        [HarmonyPostfix]
-        public static void StartOfRoundWake()
-        {
-            Create();
         }
 
         void Start()
@@ -251,7 +246,7 @@ namespace RebalancedMoons
                             level.SelectableLevel.spawnableScrap.Clear();
                             foreach (var item in StartOfRound.Instance.allItemsList.itemsList)
                             {
-                                if (!item.twoHanded && item.isScrap)
+                                if (item != null && !item.twoHanded && item.isScrap)
                                 {
 
                                     if (item.isDefensiveWeapon && item.itemName != "Stop sign" && item.itemName != "Yield sign")

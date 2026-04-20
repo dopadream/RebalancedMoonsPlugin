@@ -16,12 +16,13 @@ using UnityEngine.Rendering.HighDefinition;
 namespace RebalancedMoons
 {
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
+    [BepInDependency(LETHAL_LEVEL_LOADER, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(WEATHER_REGISTRY, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(LOBBY_COMPATIBILITY, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; set; }
-        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.16.0", WEATHER_REGISTRY = "mrov.WeatherRegistry", LOBBY_COMPATIBILITY = "BMX.LobbyCompatibility";
+        public const string PLUGIN_GUID = "dopadream.lethalcompany.rebalancedmoons", PLUGIN_NAME = "RebalancedMoons", PLUGIN_VERSION = "1.16.0", WEATHER_REGISTRY = "mrov.WeatherRegistry", LOBBY_COMPATIBILITY = "BMX.LobbyCompatibility", LETHAL_LEVEL_LOADER = "imabatby.lethallevelloader";
         internal static new ManualLogSource Logger;
         internal static ExtendedMod rebalancedMoonsMod;
         internal static SpawnableOutsideObject embrionBoulder1, embrionBoulder2, embrionBoulder3, embrionBoulder4;
@@ -62,8 +63,6 @@ namespace RebalancedMoons
             var embrionBundleFilePath = Path.Combine(dllFolderPath, "embrionboulders");
             EmbrionBundle = AssetBundle.LoadFromFile(embrionBundleFilePath);
 
-            NetcodePatcher();
-
             AssetBundleLoader.AddOnExtendedModLoadedListener(OnExtendedModRegistered, "dopadream", "RebalancedMoons");
 
             Harmony harmony = new Harmony(PLUGIN_GUID);
@@ -82,24 +81,6 @@ namespace RebalancedMoons
 
         }
 
-
-        private static void NetcodePatcher()
-        {
-            var types = Assembly.GetExecutingAssembly().GetTypes();
-            foreach (var type in types)
-            {
-                var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-                foreach (var method in methods)
-                {
-                    var attributes = method.GetCustomAttributes(typeof(RuntimeInitializeOnLoadMethodAttribute), false);
-                    if (attributes.Length > 0)
-                    {
-                        method.Invoke(null, null);
-                    }
-                }
-            }
-        }
-
         internal static void OnExtendedModRegistered(ExtendedMod extendedMod)
         {
             if (extendedMod == null) return;
@@ -108,16 +89,11 @@ namespace RebalancedMoons
 
 
 
-
+        [HarmonyPatch]
         internal class RebalancedMoonsPatches
         {
             static void InitMoons()
             {
-                if (!LethalLevelLoader.Plugin.IsSetupComplete)
-                {
-                    return;
-                }
-
                 foreach (ExtendedLevel extendedLevel in PatchedContent.VanillaExtendedLevels)
                 {
                     SwapScene(extendedLevel);
@@ -174,12 +150,11 @@ namespace RebalancedMoons
                 }
             }
 
-            [HarmonyPatch(typeof(QuickMenuManager), nameof(QuickMenuManager.Start))]
-            [HarmonyPostfix]
-            static void SubscribeToHandler()
+            [HarmonyPrepare]
+            static void SubscribeToHandler(MethodBase original)
             {
-                RBMNetworker.SendLevelEvent += RebalancedMoonsPatches.ReceivedLevelFromServer;
-                SetupLobby(StartOfRound.Instance);
+                if (original == null)
+                    LethalLevelLoader.Plugin.onLobbyInitialized += SetupLobby;
             }
 
             [HarmonyPatch(typeof(QuickMenuManager), nameof(QuickMenuManager.LeaveGameConfirm))]
@@ -189,15 +164,16 @@ namespace RebalancedMoons
                 RBMNetworker.SendLevelEvent -= RebalancedMoonsPatches.ReceivedLevelFromServer;
             }
 
-            [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.OnClientConnect))]
+            /* [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.OnClientConnect))]
             [HarmonyPostfix]
             static void ClientConnectPostFix(StartOfRound __instance)
             {
-                SetupLobby(__instance);
-            }
+                SetupLobby();
+            } */
 
-            static void SetupLobby(StartOfRound __instance)
+            static void SetupLobby()
             {
+                RBMNetworker.SendLevelEvent += RebalancedMoonsPatches.ReceivedLevelFromServer;
 
                 // yeah i know this is weird ok just leaving this method here in case i want to add anything extra 
 

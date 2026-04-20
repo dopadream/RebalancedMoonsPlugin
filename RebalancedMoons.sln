@@ -5,6 +5,8 @@ VisualStudioVersion = 17.4.33403.182
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RebalancedMoons", "RebalancedMoons.csproj", "{51CDA42D-EABB-4867-AF7D-28627AA62707}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RBMChameleonCompat", "ChameleonCompat\RBMChameleonCompat.csproj", "{A6CACB10-1E78-423B-BF2A-9F87626FC3BF}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{45262A9C-C597-432A-A2A4-89A0FA3DD97A}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -20,6 +22,10 @@ Global
 		{51CDA42D-EABB-4867-AF7D-28627AA62707}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51CDA42D-EABB-4867-AF7D-28627AA62707}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51CDA42D-EABB-4867-AF7D-28627AA62707}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6CACB10-1E78-423B-BF2A-9F87626FC3BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6CACB10-1E78-423B-BF2A-9F87626FC3BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6CACB10-1E78-423B-BF2A-9F87626FC3BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6CACB10-1E78-423B-BF2A-9F87626FC3BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
